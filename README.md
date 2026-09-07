@@ -98,7 +98,7 @@ component to worry about mixing in on this hosting account.
 > upload (config.php doesn't exist on a fresh server yet) or if you ever
 > need to deploy without GitHub.
 >
-> First automated deploy: 2026-09-07.
+> First automated deploy: 2026-09-07 (secrets fixed and retested same day).
 
 1. In cPanel, open **File Manager** (or use an FTP/SFTP client such as
    FileZilla — your FTP login details are in cPanel under **FTP Accounts**).
