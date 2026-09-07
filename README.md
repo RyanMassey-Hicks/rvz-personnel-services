@@ -86,6 +86,18 @@ component to worry about mixing in on this hosting account.
 
 ## 3. Upload the files
 
+> **This repo now deploys automatically.** Pushing to `main` on GitHub
+> triggers `.github/workflows/deploy.yml`, which uploads every changed
+> file straight to `public_html` over FTP — no manual upload needed for
+> day-to-day changes. It's additive-only (uses `lftp mirror --reverse`
+> with no `--delete`), so it never touches `config/config.php` or
+> `uploads/` (both are gitignored and therefore never part of the
+> checkout it deploys). Required repo secrets: `FTP_SERVER`,
+> `FTP_USERNAME`, `FTP_PASSWORD` (Settings → Secrets and variables →
+> Actions). The manual steps below are still useful for the *first-ever*
+> upload (config.php doesn't exist on a fresh server yet) or if you ever
+> need to deploy without GitHub.
+
 1. In cPanel, open **File Manager** (or use an FTP/SFTP client such as
    FileZilla — your FTP login details are in cPanel under **FTP Accounts**).
 2. Navigate to your account's web root: **`public_html`** inside your

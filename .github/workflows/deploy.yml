@@ -1,0 +1,42 @@
+name: Deploy to Xneelo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install lftp
+        run: sudo apt-get update -y && sudo apt-get install -y lftp
+
+      # Additive-only deploy: uploads new/changed files, overwrites files
+      # that changed, and NEVER deletes anything on the server (no --delete
+      # flag). config/config.php and uploads/* are gitignored, so they're
+      # simply absent from this checkout and are never touched by this
+      # step — the live database password, Paystack/Gemini keys, and every
+      # candidate's uploaded resume/SLA/logo stay exactly where they are
+      # across every deploy.
+      - name: Upload to public_html (never deletes)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<'LFTP_EOF'
+          set ftp:ssl-allow no
+          set mirror:parallel-transfer-count 4
+          mirror --reverse --verbose \
+            --exclude-glob .git* \
+            --exclude-glob .github/ \
+            --exclude-glob .gitignore \
+            ./ /public_html/
+          LFTP_EOF
+
+      - name: Verify site is responding
+        run: curl -sf -o /dev/null -w "Site responded: %{http_code}\n" "https://www.nhestate.co.za/index.php"
