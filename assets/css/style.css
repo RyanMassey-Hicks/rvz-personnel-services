@@ -1,0 +1,568 @@
+/* ==========================================================================
+   RVZ Personnel Services & Labour Hiring Specialists — design system
+   Palette: navy / silver-blue / black / white / silver, accent orange
+   Type: Space Grotesk (display/headings) + Inter (body) — funky-but-elegant pairing
+   ========================================================================== */
+:root {
+    --rvz-navy: #0a1f44;
+    --rvz-navy-dark: #061530;
+    --rvz-navy-light: #14305f;
+    --rvz-blue: #2a5caa;
+    --rvz-silver-blue: #6f8fb8;
+    --rvz-silver: #c7ccd6;
+    --rvz-silver-light: #eef1f6;
+    --rvz-black: #0d0d0f;
+    --rvz-white: #ffffff;
+    --rvz-accent: #ff7a1a;
+    --rvz-accent-dark: #e2650a;
+    --rvz-success: #1f9d55;
+    --rvz-warning: #c98a1f;
+    --rvz-danger: #c9302c;
+    --rvz-radius: .85rem;
+    --rvz-radius-sm: .55rem;
+    --rvz-radius-pill: 999px;
+    --rvz-shadow: 0 2px 10px rgba(10, 31, 68, .08);
+    --rvz-shadow-lg: 0 10px 32px rgba(10, 31, 68, .16);
+    --rvz-font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+    --rvz-font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+html, body { height: 100%; }
+body {
+    background-color: var(--rvz-silver-light);
+    color: var(--rvz-black);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: var(--rvz-font-body);
+}
+h1, h2, h3, h4, h5, h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6,
+.rvz-brandmark, .navbar-brand {
+    font-family: var(--rvz-font-display);
+    letter-spacing: -.02em;
+}
+h1, h2, h3, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 { font-weight: 700; }
+
+::selection { background: var(--rvz-accent); color: #fff; }
+:focus-visible { outline: 2px solid var(--rvz-accent); outline-offset: 2px; }
+/* Sticky footer: on short pages the footer sits at the bottom of the
+   viewport instead of floating up right under sparse content. */
+.rvz-navbar { flex-shrink: 0; }
+main.container { flex: 1 0 auto; }
+.rvz-footer { flex-shrink: 0; }
+
+/* ---- Bootstrap color overrides, RVZ palette ---- */
+.btn-primary {
+    --bs-btn-bg: var(--rvz-navy);
+    --bs-btn-border-color: var(--rvz-navy);
+    --bs-btn-hover-bg: var(--rvz-navy-light);
+    --bs-btn-hover-border-color: var(--rvz-navy-light);
+    --bs-btn-active-bg: var(--rvz-navy-dark);
+    --bs-btn-active-border-color: var(--rvz-navy-dark);
+    --bs-btn-disabled-bg: var(--rvz-silver-blue);
+    --bs-btn-disabled-border-color: var(--rvz-silver-blue);
+    background-image: linear-gradient(135deg, var(--rvz-navy) 0%, var(--rvz-blue) 100%);
+    border: none;
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--rvz-navy);
+    --bs-btn-border-color: var(--rvz-navy);
+    --bs-btn-hover-bg: var(--rvz-navy);
+    --bs-btn-hover-border-color: var(--rvz-navy);
+    --bs-btn-active-bg: var(--rvz-navy-dark);
+}
+a { color: var(--rvz-navy); }
+a:hover { color: var(--rvz-blue); }
+.text-primary { color: var(--rvz-navy) !important; }
+.bg-primary { background-color: var(--rvz-navy) !important; }
+.badge.bg-secondary { background-color: var(--rvz-silver-blue) !important; }
+.badge.bg-success { background-color: var(--rvz-success) !important; }
+.form-control:focus, .form-select:focus {
+    border-color: var(--rvz-silver-blue);
+    box-shadow: 0 0 0 .2rem rgba(111, 143, 184, .25);
+}
+
+/* ---- Buttons — pill shape, gradient primary, subtle lift on hover ---- */
+.btn {
+    border-radius: var(--rvz-radius-pill);
+    font-weight: 600;
+    transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--rvz-shadow); }
+.btn:active { transform: translateY(0); }
+.btn-lg { font-weight: 700; }
+
+/* ---- Badges — pill shape, a little more breathing room ---- */
+.badge { border-radius: var(--rvz-radius-pill); font-weight: 600; letter-spacing: .01em; }
+
+/* ---- Form controls — softer corners, consistent with the wider radius scale ---- */
+.form-control, .form-select {
+    border-radius: var(--rvz-radius-sm);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+/* ---- Cards — subtle lift on hover everywhere, a bit of premium depth ---- */
+.card {
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+.card:hover { box-shadow: var(--rvz-shadow-lg); }
+
+/* ---- Brand mark (used until a supplied logo image replaces it) ---- */
+.rvz-brandmark {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+.rvz-brandmark .mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--rvz-navy) 0%, var(--rvz-blue) 100%);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    box-shadow: var(--rvz-shadow);
+}
+.rvz-brandmark .word {
+    line-height: 1.05;
+}
+.rvz-brandmark .word small {
+    display: block;
+    font-size: .58rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .75;
+}
+/* Overrides the generic "img { max-width:100%; height:auto }" rule below,
+   which otherwise stretches the logo to its full natural size (~350px).
+   !important guards against this being hand-edited again by accident. */
+.rvz-brandmark img {
+    height: 30px !important;
+    width: auto !important;
+    max-width: none !important;
+    flex-shrink: 0;
+}
+
+/* ---- Navbar ---- */
+.navbar.rvz-navbar {
+    background: var(--rvz-navy) !important;
+    box-shadow: var(--rvz-shadow);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+.rvz-navbar .nav-link {
+    color: rgba(255, 255, 255, .82) !important;
+    font-weight: 500;
+    position: relative;
+}
+.rvz-navbar .nav-link:hover,
+.rvz-navbar .nav-link.active {
+    color: #fff !important;
+}
+/* Funky little animated underline on nav links (skipped on the pill-shaped CTA buttons) */
+.rvz-navbar .nav-link:not(.btn)::after {
+    content: '';
+    position: absolute;
+    left: .5rem;
+    right: .5rem;
+    bottom: 2px;
+    height: 2px;
+    background: var(--rvz-accent);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .2s ease;
+}
+.rvz-navbar .nav-link:not(.btn):hover::after { transform: scaleX(1); }
+.rvz-navbar .btn-primary {
+    --bs-btn-bg: var(--rvz-silver-blue);
+    --bs-btn-border-color: var(--rvz-silver-blue);
+    --bs-btn-hover-bg: #86a5cc;
+}
+.rvz-navbar .dropdown-menu { border: none; box-shadow: var(--rvz-shadow-lg); }
+.rvz-navbar .dropdown-item:hover, .rvz-navbar .dropdown-item:focus { background: var(--rvz-silver-light); color: var(--rvz-navy); }
+.rvz-navbar .dropdown-toggle::after { vertical-align: .1em; }
+
+/* ---- Notification bell ---- */
+.rvz-notif-badge {
+    position: absolute;
+    top: 2px;
+    right: -2px;
+    font-size: .6rem;
+    padding: .2em .4em;
+    border-radius: 50px;
+}
+.rvz-notif-panel {
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: .5rem;
+}
+.rvz-notif-item { white-space: normal; border-radius: 6px; padding: .5rem .6rem; }
+.rvz-notif-item.is-unread { background: var(--rvz-silver-light); }
+.rvz-notif-item.is-unread .fw-semibold::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--rvz-accent);
+    margin-right: 6px;
+}
+
+/* ---- Hero / search ---- */
+.rvz-hero {
+    background: linear-gradient(120deg, var(--rvz-navy) 0%, var(--rvz-navy-dark) 100%);
+    color: #fff;
+    border-radius: var(--rvz-radius);
+    padding: 2.75rem 1.75rem;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+/* Subtle dot-grid texture — the "funky" layer, kept quiet enough to stay elegant */
+.rvz-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: .5;
+    z-index: -1;
+    pointer-events: none;
+}
+.rvz-hero h1 { font-weight: 700; letter-spacing: -.02em; }
+.rvz-hero p { color: var(--rvz-silver); }
+.rvz-search-card {
+    background: #fff;
+    border-radius: var(--rvz-radius);
+    box-shadow: var(--rvz-shadow-lg);
+    padding: 1rem;
+}
+
+/* ---- Entrance animation — used on hero bands and auth cards for a livelier first paint ---- */
+@keyframes rvzFadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.rvz-hero, .rvz-marketing-hero, .rvz-auth-card { animation: rvzFadeInUp .4s ease-out; }
+
+/* ---- Cards / listings ---- */
+.card {
+    background: #fff;
+    border: 1px solid rgba(10, 31, 68, .06);
+    border-radius: var(--rvz-radius);
+}
+.card.shadow-sm { box-shadow: var(--rvz-shadow) !important; }
+.rvz-job-card {
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+.rvz-job-card:hover {
+    box-shadow: var(--rvz-shadow-lg);
+    transform: translateY(-2px);
+}
+.table { background: white; }
+
+/* ---- Save-job (bookmark) button ---- */
+.rvz-save-btn {
+    border: 1px solid var(--rvz-silver);
+    background: #fff;
+    color: var(--rvz-navy);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.rvz-save-btn { transition: transform .15s ease, background-color .15s ease; }
+.rvz-save-btn:hover { background: var(--rvz-silver-light); transform: scale(1.08); }
+.rvz-save-btn.is-saved { background: var(--rvz-navy); border-color: var(--rvz-navy); color: #fff; }
+
+/* ---- Candidate home summary cards ---- */
+.rvz-summary-card {
+    border-radius: var(--rvz-radius);
+    padding: 1.1rem 1.25rem;
+    color: #fff;
+    box-shadow: var(--rvz-shadow);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.rvz-summary-card:hover { transform: translateY(-2px); box-shadow: var(--rvz-shadow-lg); }
+.rvz-summary-card .num { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+.rvz-summary-card .label { font-size: .8rem; opacity: .9; margin-top: .25rem; }
+.rvz-summary-card.c1 { background: linear-gradient(135deg, var(--rvz-navy), var(--rvz-navy-light)); }
+.rvz-summary-card.c2 { background: linear-gradient(135deg, var(--rvz-blue), var(--rvz-silver-blue)); }
+.rvz-summary-card.c3 { background: linear-gradient(135deg, #37414f, #1b2230); }
+
+/* ---- Dashboard sparkline + activity feed ---- */
+.rvz-sparkline {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 120px;
+    padding-top: 8px;
+}
+.rvz-spark-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+.rvz-spark-bar {
+    width: 100%;
+    max-width: 34px;
+    background: linear-gradient(180deg, var(--rvz-blue), var(--rvz-navy));
+    border-radius: 6px 6px 2px 2px;
+    transition: height .3s ease;
+}
+.rvz-spark-label {
+    font-size: .68rem;
+    color: #888;
+    margin-top: 6px;
+    text-transform: uppercase;
+}
+.rvz-activity-feed li {
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--rvz-silver-light);
+    font-size: .85rem;
+}
+.rvz-activity-feed li:last-child { border-bottom: none; }
+
+/* ---- Mobile / tablet friendliness ---- */
+img { max-width: 100%; height: auto; }
+.navbar-nav .nav-link { padding-top: .5rem; padding-bottom: .5rem; }
+@media (max-width: 991.98px) {
+    .navbar-nav { padding-top: .5rem; }
+    .navbar-nav .btn { display: inline-block; margin-top: .25rem; }
+    .rvz-hero { padding: 2rem 1.25rem; }
+}
+@media (max-width: 767.98px) {
+    .rvz-summary-card { margin-bottom: .75rem; }
+}
+@media (max-width: 575.98px) {
+    main.container { padding-left: .75rem; padding-right: .75rem; }
+    .display-6 { font-size: 1.75rem; }
+    .rvz-hero h1 { font-size: 1.5rem; }
+}
+
+/* ---- Recruiter dashboard — job stat circles ---- */
+.job-stats-row { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: flex-start; }
+
+/* ---- Speedometer gauges (includes/gauge_widget.php) — the site's one style for every circular data indicator ---- */
+.rvz-gauge-row { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-around; }
+.rvz-gauge { text-align: center; flex-shrink: 0; }
+.rvz-gauge-label { font-size: .85rem; color: #495057; margin-top: -.5rem; font-weight: 600; }
+@media (max-width: 575.98px) {
+    .rvz-gauge-label { font-size: .75rem; }
+}
+
+/* ---- Pipeline board ---- */
+.pipeline-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 1rem; }
+.pipeline-board.rvz-overflow { overflow-x: auto; }
+.pipeline-column {
+    background: var(--rvz-silver-light);
+    border-radius: 8px;
+    padding: .75rem;
+    min-height: 260px;
+}
+.pipeline-column h6 { text-transform: uppercase; font-size: .75rem; color: var(--rvz-navy); font-weight: 700; }
+.candidate-card {
+    background: white;
+    border-radius: 6px;
+    padding: .6rem .75rem;
+    margin-bottom: .6rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1);
+    cursor: grab;
+}
+.candidate-card.dragging { opacity: .4; }
+.pipeline-column.drag-over { outline: 2px dashed var(--rvz-blue); }
+.source-badge { font-size: .65rem; }
+.rvz-flag-row { display: flex; gap: .75rem; margin-top: .4rem; font-size: .72rem; color: #555; flex-wrap: wrap; }
+.rvz-flag-row label { display: flex; align-items: center; gap: .25rem; cursor: pointer; }
+@media (max-width: 1199.98px) {
+    .pipeline-board { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+}
+@media (max-width: 575.98px) {
+    .pipeline-board { grid-template-columns: 1fr; }
+}
+
+/* ---- Footer (compact) ---- */
+.rvz-footer {
+    background: var(--rvz-navy);
+    color: var(--rvz-silver);
+    margin-top: 2rem;
+    font-size: .85rem;
+}
+.rvz-footer a { color: #fff; text-decoration: none; }
+.rvz-footer a:hover { color: var(--rvz-silver-blue); text-decoration: underline; }
+.rvz-footer .rvz-legal-line { font-size: .72rem; color: var(--rvz-silver); opacity: .8; }
+.rvz-footer-links { display: flex; flex-wrap: wrap; gap: .35rem .9rem; }
+.rvz-footer-links a { color: var(--rvz-silver); }
+.rvz-footer-links a:hover { color: #fff; }
+.rvz-social-icons { display: flex; gap: .45rem; flex-shrink: 0; }
+.rvz-social-icons a {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+    transition: transform .15s ease, background-color .15s ease;
+}
+.rvz-social-icons a:hover { background: var(--rvz-accent); transform: translateY(-2px); }
+.rvz-newsletter-form input { border-radius: var(--rvz-radius-pill) 0 0 var(--rvz-radius-pill); }
+.rvz-newsletter-form button { border-radius: 0 var(--rvz-radius-pill) var(--rvz-radius-pill) 0; }
+@media (max-width: 767.98px) {
+    .rvz-footer-top { justify-content: center !important; text-align: center; }
+}
+
+/* ---- Cookie consent banner ---- */
+.rvz-cookie-banner {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--rvz-navy-dark);
+    color: #fff;
+    padding: 1rem 1.25rem;
+    z-index: 2000;
+    box-shadow: 0 -4px 18px rgba(0,0,0,.25);
+    display: none;
+}
+.rvz-cookie-banner.is-visible { display: block; }
+.rvz-cookie-banner a { color: var(--rvz-silver-blue); }
+.rvz-cookie-banner .btn-outline-light { --bs-btn-border-color: var(--rvz-silver); }
+.rvz-cookie-prefs {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,.15);
+}
+.rvz-cookie-prefs.is-visible { display: block; }
+.rvz-cookie-pref-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .5rem 0;
+}
+.rvz-cookie-pref-row + .rvz-cookie-pref-row { border-top: 1px solid rgba(255,255,255,.08); }
+.rvz-cookie-pref-row input[type="checkbox"] { flex-shrink: 0; margin-top: .25rem; width: 1.1rem; height: 1.1rem; }
+
+/* ---- Marketing homepage ---- */
+.rvz-marketing-hero {
+    background: linear-gradient(120deg, var(--rvz-navy) 0%, var(--rvz-navy-dark) 100%);
+    color: #fff;
+}
+.rvz-mv-card { border-top: 4px solid var(--rvz-navy); transition: border-color .2s ease, transform .2s ease; }
+.rvz-mv-card:hover { border-top-color: var(--rvz-accent); transform: translateY(-2px); }
+.rvz-mv-icon { font-size: 2rem; margin-bottom: .25rem; }
+.rvz-stat-box {
+    background: #fff;
+    border: 1px solid var(--rvz-silver);
+    border-radius: var(--rvz-radius);
+    padding: 1.25rem;
+    text-align: center;
+    height: 100%;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.rvz-stat-box:hover { transform: translateY(-2px); box-shadow: var(--rvz-shadow-lg); }
+.rvz-stat-box .num { font-size: 1.6rem; font-weight: 800; color: var(--rvz-navy); font-family: var(--rvz-font-display); }
+.rvz-stat-box .label { font-size: .78rem; color: #777; text-transform: uppercase; letter-spacing: .04em; margin-top: .25rem; }
+.rvz-feature-icon { font-size: 2.5rem; margin-bottom: .5rem; transition: transform .2s ease; }
+.rvz-feature-icon:hover { transform: scale(1.1) rotate(-4deg); }
+.rvz-cta-banner {
+    background: var(--rvz-silver-light);
+    border: 1px solid var(--rvz-silver);
+    border-radius: var(--rvz-radius);
+    padding: 2.5rem 1.5rem;
+}
+
+.rvz-company-hero {
+    border-radius: var(--rvz-radius);
+    padding: 1.75rem;
+}
+
+/* ---- Share dropdown (job cards + job detail) ---- */
+.rvz-share-dropdown .dropdown-menu { min-width: 160px; }
+
+/* ---- Support chatbot widget ---- */
+.rvz-chat-fab {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--rvz-accent);
+    color: #fff;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 18px rgba(226, 101, 10, .55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1040;
+    cursor: pointer;
+    animation: rvzChatPulse 2.5s ease-in-out infinite;
+}
+.rvz-chat-fab:hover { background: var(--rvz-accent-dark); animation: none; }
+@keyframes rvzChatPulse {
+    0%, 100% { box-shadow: 0 4px 18px rgba(226, 101, 10, .55); }
+    50% { box-shadow: 0 4px 24px rgba(255, 122, 26, .85), 0 0 0 6px rgba(255, 122, 26, .15); }
+}
+.rvz-chat-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 90px;
+    width: min(360px, calc(100vw - 40px));
+    height: min(520px, calc(100vh - 140px));
+    background: #fff;
+    border-radius: var(--rvz-radius);
+    box-shadow: var(--rvz-shadow-lg);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1040;
+}
+.rvz-chat-panel.is-open { display: flex; }
+.rvz-chat-header {
+    background: var(--rvz-navy);
+    color: #fff;
+    padding: .85rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+.rvz-chat-header button { background: none; border: none; color: #fff; font-size: 1.2rem; line-height: 1; }
+.rvz-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: .85rem;
+    background: var(--rvz-silver-light);
+}
+.rvz-chat-msg { margin-bottom: .6rem; max-width: 88%; padding: .5rem .7rem; border-radius: 10px; font-size: .85rem; line-height: 1.35; }
+.rvz-chat-msg.user { background: var(--rvz-navy); color: #fff; margin-left: auto; border-bottom-right-radius: 2px; }
+.rvz-chat-msg.assistant { background: #fff; color: var(--rvz-black); border: 1px solid var(--rvz-silver); border-bottom-left-radius: 2px; }
+.rvz-chat-msg.system-note { background: transparent; color: #777; font-size: .75rem; text-align: center; max-width: 100%; margin: .4rem auto; }
+.rvz-chat-footer { border-top: 1px solid var(--rvz-silver); padding: .6rem; flex-shrink: 0; }
+.rvz-chat-escalate { text-align: center; padding: 0 .6rem .5rem; flex-shrink: 0; }
+.rvz-chat-escalate a { font-size: .75rem; }
+@media (max-width: 400px) {
+    .rvz-chat-panel { right: 10px; bottom: 80px; }
+    .rvz-chat-fab { right: 14px; bottom: 14px; }
+}
+
+/* ---- Utility ---- */
+.rvz-badge-soft {
+    background: var(--rvz-silver-light);
+    color: var(--rvz-navy);
+    border: 1px solid var(--rvz-silver);
+    font-weight: 600;
+}
