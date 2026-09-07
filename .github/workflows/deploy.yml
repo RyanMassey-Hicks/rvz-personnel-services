@@ -39,4 +39,5 @@ jobs:
           LFTP_EOF
 
       - name: Verify site is responding
-        run: curl -sf -o /dev/null -w "Site responded: %{http_code}\n" "https://www.nhestate.co.za/index.php"
+        run: |
+          curl -sf -o /dev/null -w "Site responded: %{http_code}\n" "https://www.nhestate.co.za/index.php"
