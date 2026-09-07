@@ -97,6 +97,8 @@ component to worry about mixing in on this hosting account.
 > Actions). The manual steps below are still useful for the *first-ever*
 > upload (config.php doesn't exist on a fresh server yet) or if you ever
 > need to deploy without GitHub.
+>
+> First automated deploy: 2026-09-07.
 
 1. In cPanel, open **File Manager** (or use an FTP/SFTP client such as
    FileZilla — your FTP login details are in cPanel under **FTP Accounts**).
