@@ -1,6 +1,11 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 
+// A scraper harvesting the whole database hits many different job IDs
+// rapidly; a real visitor views a handful per session. Generous enough
+// that legitimate browsing never notices it.
+enforce_rate_limit('job_detail', 90, 60);
+
 $jobId = (int) ($_GET['id'] ?? 0);
 $stmt = db()->prepare(
     'SELECT jobs.*, companies.name AS company_name, companies.website AS company_website,

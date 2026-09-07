@@ -13,6 +13,13 @@
  */
 require __DIR__ . '/../includes/bootstrap.php';
 
+// This is a fully open, no-auth JSON feed of every open job — exactly the
+// kind of endpoint a competitor would point a scraper at. 30 requests/min
+// per IP is generous for the legitimate embed widget (one call per real
+// visitor's page load) but stops bulk harvesting; Google/Bing and the
+// social-preview crawlers are never limited (see includes/rate_limit.php).
+enforce_rate_limit('api_jobs', 30, 60, true);
+
 header('Content-Type: application/json; charset=utf-8');
 // Public, read-only, cross-origin by design — this is what lets an external
 // website's browser-side JS pull the job list directly.

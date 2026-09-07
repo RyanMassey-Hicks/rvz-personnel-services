@@ -2,6 +2,10 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/job_card.php';
 
+// Generous limit — real browsing/searching never gets close to this, it's
+// aimed at bots iterating searches/pages to harvest the whole job board.
+enforce_rate_limit('jobs_browse', 90, 60);
+
 $user = current_user();
 if ($user && $user['role'] === 'recruiter') {
     redirect('/dashboard.php');

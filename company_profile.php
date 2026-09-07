@@ -2,6 +2,10 @@
 require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/job_card.php';
 
+// Same reasoning as job.php — iterating company IDs is a real scrape
+// pattern, real browsing never gets close to this limit.
+enforce_rate_limit('company_profile', 90, 60);
+
 $companyId = (int) ($_GET['id'] ?? 0);
 $stmt = db()->prepare('SELECT * FROM companies WHERE id = ?');
 $stmt->execute([$companyId]);

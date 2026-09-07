@@ -12,6 +12,11 @@
  */
 require __DIR__ . '/../includes/bootstrap.php';
 
+// Same reasoning as api/jobs.php — this is a public, no-auth page meant to
+// be embedded via iframe on someone else's site, so it's a real scrape
+// target too. Google/Bing/social crawlers are never limited.
+enforce_rate_limit('embed_careers', 60, 60);
+
 $query = trim($_GET['q'] ?? '');
 $location = trim($_GET['location'] ?? '');
 $companyId = (int) ($_GET['company_id'] ?? 0);

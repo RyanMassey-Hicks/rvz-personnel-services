@@ -468,6 +468,20 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ----------------------------------------------------------------------------
+-- Rate limiting for public, unauthenticated endpoints (the job JSON feed,
+-- embeddable careers page, public job board/detail pages) — see
+-- includes/rate_limit.php. One row per request; old rows are pruned
+-- probabilistically by the app itself, no cron job needed.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS rate_limit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL,
+    bucket VARCHAR(40) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ip_bucket_time (ip_address, bucket, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- =================================================================
 -- Optional seed data
 -- =================================================================
