@@ -25,6 +25,7 @@ require __DIR__ . '/includes/candidate_tabs.php';
 render_candidate_tabs('applications');
 ?>
 <h1 class="mb-4">My Applications</h1>
+<div class="table-responsive">
 <table class="table">
     <thead><tr><th>Job</th><th>Company</th><th>Stage</th><th>Applied</th></tr></thead>
     <tbody>
@@ -32,7 +33,7 @@ render_candidate_tabs('applications');
         <tr>
             <td><a href="<?= h(base_url('job.php?id=' . $app['job_id'])) ?>"><?= h($app['job_title']) ?></a></td>
             <td><?= h($app['company_name']) ?></td>
-            <td><span class="badge bg-info text-dark"><?= h($stageLabels[$app['stage']] ?? $app['stage']) ?></span></td>
+            <td><span class="badge <?= h(application_stage_badge_class($app['stage'])) ?>"><?= h($stageLabels[$app['stage']] ?? $app['stage']) ?></span></td>
             <td><?= h(date('M j, Y', strtotime($app['applied_on']))) ?></td>
         </tr>
     <?php endforeach; ?>
@@ -41,4 +42,5 @@ render_candidate_tabs('applications');
     <?php endif; ?>
     </tbody>
 </table>
+</div>
 <?php require __DIR__ . '/includes/footer.php'; ?>

@@ -452,6 +452,19 @@ function format_zar(float $amount): string
     return 'R' . number_format($amount, 2);
 }
 
+/** Bootstrap badge class for an application stage, so a candidate can tell their status apart at a glance. */
+function application_stage_badge_class(string $stage): string
+{
+    return match ($stage) {
+        'applied' => 'bg-secondary',
+        'screening', 'interview' => 'bg-info text-dark',
+        'offer' => 'bg-warning text-dark',
+        'hired' => 'bg-success',
+        'rejected' => 'bg-danger',
+        default => 'bg-secondary',
+    };
+}
+
 /**
  * True only for a well-formed http(s) URL. PHP's FILTER_VALIDATE_URL alone
  * is NOT enough here — it happily accepts "javascript:alert(1)" as a "valid

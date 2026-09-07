@@ -78,6 +78,8 @@ a:hover { color: var(--rvz-blue); }
 .bg-primary { background-color: var(--rvz-navy) !important; }
 .badge.bg-secondary { background-color: var(--rvz-silver-blue) !important; }
 .badge.bg-success { background-color: var(--rvz-success) !important; }
+.badge.bg-warning { background-color: var(--rvz-warning) !important; }
+.badge.bg-danger { background-color: var(--rvz-danger) !important; }
 .form-control:focus, .form-select:focus {
     border-color: var(--rvz-silver-blue);
     box-shadow: 0 0 0 .2rem rgba(111, 143, 184, .25);
@@ -267,7 +269,29 @@ a:hover { color: var(--rvz-blue); }
     box-shadow: var(--rvz-shadow-lg);
     transform: translateY(-2px);
 }
+/* ---- Tables — rounded card container, on-brand header, hover rows ---- */
+.table-responsive {
+    background: #fff;
+    border: 1px solid rgba(10, 31, 68, .06);
+    border-radius: var(--rvz-radius);
+    box-shadow: var(--rvz-shadow);
+    overflow: hidden;
+}
+.table-responsive .table { margin-bottom: 0; }
+/* Already inside a .card — skip the card-in-a-card look, keep only the header/hover styling below. */
+.card-body .table-responsive { background: none; border: none; box-shadow: none; border-radius: 0; }
 .table { background: white; }
+.table thead th {
+    background: var(--rvz-silver-light);
+    color: var(--rvz-navy);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-weight: 700;
+    border-bottom: none;
+    white-space: nowrap;
+}
+.table tbody tr:hover { background: var(--rvz-silver-light); }
 
 /* ---- Save-job (bookmark) button ---- */
 .rvz-save-btn {

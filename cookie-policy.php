@@ -15,6 +15,7 @@ the Protection of Personal Information Act 4 of 2013 (POPIA).</p>
 help us understand how the site is used.</p>
 
 <h5 class="mt-4">2. Cookies we use</h5>
+<div class="table-responsive">
 <table class="table">
     <thead><tr><th>Cookie</th><th>Purpose</th><th>Type</th></tr></thead>
     <tbody>
@@ -24,6 +25,7 @@ help us understand how the site is used.</p>
         <tr><td><code>_gcl_*</code></td><td>Google Ads conversion tracking, only set if you enable "Advertising" in Cookie Preferences</td><td>Advertising (opt-in)</td></tr>
     </tbody>
 </table>
+</div>
 <p>Google Analytics is used strictly for usage statistics (e.g. page views) and only runs if you opt in via the
 "Analytics" toggle in Cookie Preferences — it stays off by default, and Google's Consent Mode keeps it off until
 you grant it.</p>
