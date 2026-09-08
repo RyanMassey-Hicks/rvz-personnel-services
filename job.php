@@ -137,11 +137,12 @@ require __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <p class="text-muted">
+    <p class="text-muted mb-1">
         <a href="<?= h(base_url('company_profile.php?id=' . $job['company_id'])) ?>"><?= h($job['company_name']) ?></a>
         &middot; <?= h($job['location']) ?>
         <?= $job['is_remote'] ? ' &middot; Remote' : '' ?>
     </p>
+    <p class="text-muted small mb-3"><?= h(job_posted_freshness($job['created_at'])) ?></p>
     <?php if (!empty($job['company_tagline'])): ?>
         <p class="fst-italic small"><?= h($job['company_tagline']) ?></p>
     <?php endif; ?>

@@ -31,6 +31,17 @@ function render_share_dropdown(int $jobId, string $title, string $uniqueSuffix =
     <?php
 }
 
+/** "Posted today" / "Posted 3 days ago" / "Posted 3 weeks ago" — lets a candidate judge freshness at a glance. */
+function job_posted_freshness(string $createdAt): string
+{
+    $days = (int) floor((time() - strtotime($createdAt)) / 86400);
+    if ($days <= 0) return 'Posted today';
+    if ($days === 1) return 'Posted yesterday';
+    if ($days < 14) return "Posted {$days} days ago";
+    if ($days < 60) return 'Posted ' . (int) floor($days / 7) . ' weeks ago';
+    return 'Posted ' . (int) floor($days / 30) . ' months ago';
+}
+
 function render_job_card(array $job, bool $isSaved, bool $showApply, ?string $csrfToken): void
 {
     $labels = employment_type_labels();
@@ -57,6 +68,9 @@ function render_job_card(array $job, bool $isSaved, bool $showApply, ?string $cs
                 <?php endif; ?>
                 <?php if ($job['salary_min']): ?>
                     <span class="badge bg-success"><?= h(format_zar((float) $job['salary_min'])) ?> - <?= h(format_zar((float) $job['salary_max'])) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($job['created_at'])): ?>
+                    <div class="small text-muted mt-1"><?= h(job_posted_freshness($job['created_at'])) ?></div>
                 <?php endif; ?>
             </div>
             <div class="d-flex flex-column align-items-end gap-2 flex-shrink-0">

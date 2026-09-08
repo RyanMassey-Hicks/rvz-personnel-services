@@ -484,6 +484,7 @@ img { max-width: 100%; height: auto; }
     background: linear-gradient(120deg, var(--rvz-navy) 0%, var(--rvz-navy-dark) 100%);
     color: #fff;
 }
+.rvz-hero-search { max-width: 700px; }
 .rvz-mv-card { border-top: 4px solid var(--rvz-navy); transition: border-color .2s ease, transform .2s ease; }
 .rvz-mv-card:hover { border-top-color: var(--rvz-accent); transform: translateY(-2px); }
 .rvz-mv-icon { font-size: 2rem; margin-bottom: .25rem; }

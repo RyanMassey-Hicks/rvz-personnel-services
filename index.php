@@ -33,6 +33,23 @@ require __DIR__ . '/includes/header.php';
             RVZ Personnel Services &amp; Labour Hiring Specialists is part of RVZ International Group —
             built to make hiring and job hunting simpler, faster, and fairer for everyone involved.
         </p>
+        <form method="get" action="<?= h(base_url('jobs.php')) ?>" class="rvz-search-card rvz-hero-search mx-auto text-start mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <input type="text" name="q" class="form-control form-control-lg" placeholder="Job title or keyword">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="location" class="form-control form-control-lg" placeholder="Location">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Search Jobs</button>
+                </div>
+            </div>
+            <div class="form-check mt-2 mb-0">
+                <input type="checkbox" name="remote_only" value="1" class="form-check-input" id="heroRemoteOnly">
+                <label class="form-check-label small text-muted" for="heroRemoteOnly">Remote only</label>
+            </div>
+        </form>
         <div class="d-flex flex-wrap justify-content-center gap-3">
             <a href="<?= h(base_url('jobs.php')) ?>" class="btn btn-light btn-lg">Browse Jobs</a>
             <a href="<?= h(base_url('signup.php')) ?>" class="btn btn-outline-light btn-lg">I'm Hiring &rarr;</a>
