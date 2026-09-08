@@ -5,19 +5,36 @@
 
 Options -Indexes
 
-# Canonicalize every request to https://www.nhestate.co.za — matching
-# SITE_URL in config/config.php. Without this, a visitor landing on the
-# bare domain (or over http://) gets pages whose AJAX calls (chatbot,
-# live notifications, etc.) target the www origin via base_url(), which
-# the browser then blocks as cross-origin (CORS) since the page itself
-# loaded on a different host. Discovered 2026-08-28 while live-testing the
-# chatbot on the bare domain — it silently broke both the chatbot and the
-# notification poll for anyone who ever lands on nhestate.co.za without
-# "www.", which is extremely common (typed URLs, old links, etc.).
+# Canonicalize every request to match SITE_URL in config/config.php.
+# Without this, a visitor landing on a non-canonical host/scheme gets
+# pages whose AJAX calls (chatbot, live notifications, etc.) target a
+# different origin via base_url(), which the browser then blocks as
+# cross-origin (CORS) since the page itself loaded on a different host.
+# Discovered 2026-08-28 on nhestate.co.za's bare domain — it silently
+# broke both the chatbot and the notification poll for anyone who ever
+# lands on the site without "www.", which is extremely common (typed
+# URLs, old links, etc.).
+#
+# This same repo is deployed to two hosts during the move from
+# nhestate.co.za to recruitement.rvzgroup.co.za (see README), each with
+# its own canonical form (old = www required, new = bare required), so
+# both rules live here side by side. Delete the nhestate.co.za block
+# once the move is fully complete and that host is retired.
 RewriteEngine On
-RewriteCond %{HTTPS} off [OR]
+
+# --- nhestate.co.za (being retired — see README) ---
 RewriteCond %{HTTP_HOST} ^nhestate\.co\.za$ [NC]
 RewriteRule ^ https://www.nhestate.co.za%{REQUEST_URI} [L,R=301]
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^(www\.)?nhestate\.co\.za$ [NC]
+RewriteRule ^ https://www.nhestate.co.za%{REQUEST_URI} [L,R=301]
+
+# --- recruitement.rvzgroup.co.za (current) ---
+RewriteCond %{HTTP_HOST} ^www\.recruitement\.rvzgroup\.co\.za$ [NC]
+RewriteRule ^ https://recruitement.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^(www\.)?recruitement\.rvzgroup\.co\.za$ [NC]
+RewriteRule ^ https://recruitement.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
 
 # Note: error display is intentionally controlled in config/config.php via
 # DEBUG_MODE (ini_set), not here. A raw php_flag directive at the site
