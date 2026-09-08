@@ -9,17 +9,19 @@ stack (Linux, Apache, MySQL/MariaDB, PHP). Every step below uses the real
 cPanel tool names.
 
 > **Confirmed host details for this site (current, since 2026-09-08):**
-> - Live URL: `https://recruitement.rvzgroup.co.za` (note the spelling —
->   intentional, not a typo; a correctly-spelled sibling subdomain also
->   exists but is unused)
-> - Account home: `/public_html/recruitement.rvzgroup.co.za/` — this is
+> - Live URL: `https://recruitment.rvzgroup.co.za` (correctly spelled).
+>   The site briefly ran at the misspelled `recruitement.rvzgroup.co.za`
+>   for a few hours on 2026-09-08 before this was caught — that subdomain
+>   now just 301-redirects to the correct one (see `.htaccess`), it no
+>   longer serves the app.
+> - Account home: `/public_html/recruitment.rvzgroup.co.za/` — this is
 >   **one subfolder inside a much larger shared cPanel account** that
 >   also hosts the main rvzgroup.co.za corporate site (portal, payments,
 >   blog, shop, vendor-portal, divisions, etc.) as sibling folders. Every
 >   deploy — manual or via `.github/workflows/deploy.yml` — MUST stay
 >   scoped to this one subfolder.
 > - Interim/temporary URL (works before DNS/SSL are fully live):
->   `http://recruitement.rvzgroup.co.za.www6.jnb3.host-h.net`
+>   `http://recruitment.rvzgroup.co.za.www6.jnb3.host-h.net`
 > - MySQL database host: `sql21.jnb2.host-h.net` (**not** `localhost` —
 >   see the note in Section 4)
 >
@@ -99,20 +101,22 @@ component to worry about mixing in on this hosting account.
 
 > **This repo now deploys automatically.** Pushing to `main` on GitHub
 > triggers `.github/workflows/deploy.yml`, which uploads every changed
-> file straight to `public_html/recruitement.rvzgroup.co.za/` over FTP —
+> file straight to `public_html/recruitment.rvzgroup.co.za/` over FTP —
 > no manual upload needed for day-to-day changes. It's additive-only
 > (uses `lftp mirror --reverse` with no `--delete`), so it never touches
 > `config/config.php` or `uploads/` (both are gitignored and therefore
 > never part of the checkout it deploys). Required repo secrets:
 > `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (Settings → Secrets and
-> variables → Actions) — these point at the `recruitement.rvzgroup.co.za`
-> account, not the original `nhestate.co.za` one. The manual steps below
-> are still useful for the *first-ever* upload (config.php doesn't exist
-> on a fresh server yet) or if you ever need to deploy without GitHub.
+> variables → Actions) — same `rvzgrphyew` account as before, just a
+> different target subfolder now. The manual steps below are still useful
+> for the *first-ever* upload (config.php doesn't exist on a fresh server
+> yet) or if you ever need to deploy without GitHub.
 >
 > First automated deploy: 2026-09-07, to nhestate.co.za. Repointed to
 > recruitement.rvzgroup.co.za on 2026-09-08 after the full site+DB
-> migration described above.
+> migration described above, then repointed again the same day to the
+> correctly-spelled recruitment.rvzgroup.co.za after discovering that
+> subdomain was still an unused cPanel placeholder.
 
 1. In cPanel, open **File Manager** (or use an FTP/SFTP client such as
    FileZilla — your FTP login details are in cPanel under **FTP Accounts**).
