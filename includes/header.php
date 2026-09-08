@@ -74,6 +74,10 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
     <meta name="twitter:image" content="<?= h($ogImage) ?>">
     <meta name="theme-color" content="#0a1f44">
     <link rel="manifest" href="<?= h(base_url('manifest.json')) ?>">
+    <!-- Root-level favicon.ico covers browsers/OS contexts that request it
+         directly regardless of these <link> tags (e.g. a bookmark/shortcut
+         icon lookup before the page's own HTML has loaded). -->
+    <link rel="shortcut icon" href="<?= h(base_url('favicon.ico')) ?>">
     <link rel="icon" type="image/png" href="<?= h(base_url('assets/img/favicon.png')) ?>">
     <link rel="icon" type="image/png" sizes="192x192" href="<?= h(base_url('assets/img/icon-192.png')) ?>">
     <link rel="apple-touch-icon" href="<?= h(base_url('assets/img/icon-192.png')) ?>">
