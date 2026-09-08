@@ -154,22 +154,46 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
                 <a class="nav-link rvz-for-employers d-none d-sm-inline-block" href="<?= h(base_url('become_recruiter.php')) ?>">For Employers</a>
                 <a class="btn btn-sm btn-primary text-white" href="<?= h(base_url('login.php')) ?>">Login</a>
             <?php endif; ?>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+            <button class="navbar-toggler rvz-menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                     aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+                <span></span><span></span><span></span>
             </button>
         </div>
-        <div class="collapse navbar-collapse" id="mainNav">
+        <div class="collapse navbar-collapse rvz-menu-panel" id="mainNav">
+            <div class="rvz-menu-panel-label">Menu</div>
             <div class="navbar-nav ms-auto align-items-lg-center">
                 <?php if (!$user || $user['role'] !== 'recruiter'): ?>
-                    <a class="nav-link" href="<?= h(base_url('index.php')) ?>">Home</a>
-                    <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">Pricing</a>
-                    <a class="nav-link" href="<?= h(base_url('jobs.php')) ?>">Browse Jobs</a>
+                    <a class="nav-link" href="<?= h(base_url('index.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+                        Home
+                    </a>
+                    <a class="nav-link" href="<?= h(base_url('jobs.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Browse Jobs
+                    </a>
+                    <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Pricing
+                    </a>
+                    <a class="nav-link" href="<?= h(base_url('blog.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        Blog
+                    </a>
                 <?php endif; ?>
                 <?php if ($user && $user['role'] === 'recruiter'): ?>
-                    <a class="nav-link" href="<?= h(base_url('dashboard.php')) ?>">Dashboard</a>
-                    <a class="nav-link" href="<?= h(base_url('recruiter_search.php')) ?>">Direct Search</a>
-                    <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">Pricing</a>
+                    <a class="nav-link" href="<?= h(base_url('dashboard.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-link" href="<?= h(base_url('recruiter_search.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        Direct Search
+                    </a>
+                    <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        Pricing
+                    </a>
+                    <hr class="rvz-menu-divider">
                     <a class="nav-link btn btn-sm btn-primary text-white mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('job_create.php')) ?>">+ Post a Job</a>
                     <?php if (!has_active_recruiter_subscription($user) && recruiter_total_credits_remaining((int) $user['id']) < 1): ?>
                         <a class="nav-link btn btn-sm btn-outline-light mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('pricing.php')) ?>">Buy Credits</a>

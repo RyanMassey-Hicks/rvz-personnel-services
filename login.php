@@ -17,18 +17,21 @@ $isNewAccount = ($_GET['mode'] ?? '') === 'signup';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
-    $email = trim($_POST['email'] ?? '');
+    $email = trim($_POST['email'] ?? ''); // "Email or Username" field — see the dual lookup below
     $password = $_POST['password'] ?? '';
     $username = trim($_POST['username'] ?? '');
     $next = $_POST['next'] ?? $next;
 
-    $stmt = db()->prepare('SELECT * FROM users WHERE email = ?');
-    $stmt->execute([$email]);
+    // Returning users can sign in with either their email OR their
+    // username — only account CREATION still requires a real email
+    // (checked further down, once no existing account matches either).
+    $stmt = db()->prepare('SELECT * FROM users WHERE email = ? OR username = ?');
+    $stmt->execute([$email, $email]);
     $existingUser = $stmt->fetch();
 
     if ($existingUser) {
         if (!$existingUser['password_hash'] || !password_verify($password, $existingUser['password_hash'])) {
-            $errors[] = 'Incorrect email or password.';
+            $errors[] = 'Incorrect email/username or password.';
         } else {
             log_in_user((int) $existingUser['id']);
             redirect($next !== '' ? $next : post_login_redirect_path($existingUser));
@@ -72,56 +75,64 @@ $pageTitle = 'Sign in or sign up — ' . SITE_NAME;
 require __DIR__ . '/includes/header.php';
 ?>
 
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="rvz-auth-card">
-      <h2 class="mb-1" id="rvzAuthHeading"><?= $isNewAccount ? 'Create your account' : 'Welcome' ?></h2>
-      <p class="text-muted mb-4">One account for everything — sign in or create one in a single step.</p>
+<div class="rvz-auth-backdrop">
+  <div class="rvz-auth-blob rvz-auth-blob-1"></div>
+  <div class="rvz-auth-blob rvz-auth-blob-2"></div>
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="rvz-auth-card">
+        <div class="rvz-auth-mark">
+            <img src="<?= h(base_url('assets/img/logo-mark-white.png')) ?>" alt="<?= h(SITE_NAME) ?>" height="26">
+        </div>
+        <h2 class="mb-1" id="rvzAuthHeading"><?= $isNewAccount ? 'Create your account' : 'Welcome back' ?></h2>
+        <p class="text-muted mb-4"><?= $isNewAccount ? 'Takes less than a minute — free for job seekers, always.' : 'One account, one simple step to sign in.' ?></p>
 
-      <div class="d-grid gap-2 mb-4">
-        <a href="<?= h(base_url('oauth/google.php')) ?>" class="btn btn-outline-dark rvz-oauth-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.85z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.05l3.66 2.85C6.71 7.3 9.14 5.38 12 5.38z"/></svg>
-          One-tap continue with Google
-        </a>
-        <a href="<?= h(base_url('oauth/linkedin.php')) ?>" class="btn btn-outline-primary rvz-oauth-btn">Continue with LinkedIn</a>
-        <a href="<?= h(base_url('oauth/facebook.php')) ?>" class="btn btn-outline-primary rvz-oauth-btn">Continue with Facebook</a>
+        <div class="d-grid gap-2 mb-4">
+          <a href="<?= h(base_url('oauth/google.php')) ?>" class="btn btn-outline-dark rvz-oauth-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.85z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.05l3.66 2.85C6.71 7.3 9.14 5.38 12 5.38z"/></svg>
+            Continue with Google
+          </a>
+          <a href="<?= h(base_url('oauth/linkedin.php')) ?>" class="btn btn-outline-primary rvz-oauth-btn">Continue with LinkedIn</a>
+          <a href="<?= h(base_url('oauth/facebook.php')) ?>" class="btn btn-outline-primary rvz-oauth-btn">Continue with Facebook</a>
+        </div>
+
+        <div class="text-center text-muted mb-3 rvz-auth-divider"><span>or continue with email</span></div>
+
+        <?php foreach ($errors as $e): ?>
+            <div class="alert alert-danger"><?= h($e) ?></div>
+        <?php endforeach; ?>
+
+        <form method="post" id="rvzAuthForm">
+            <?= csrf_field() ?>
+            <input type="hidden" name="next" value="<?= h($next) ?>">
+            <div class="mb-3 rvz-field">
+                <label class="form-label">Email or Username</label>
+                <input type="text" name="email" id="rvzAuthEmail" class="form-control" required autofocus
+                       autocomplete="username" placeholder="you@example.com or username"
+                       value="<?= h($_POST['email'] ?? '') ?>">
+            </div>
+            <div class="mb-3 rvz-field rvz-username-field <?= $isNewAccount ? '' : 'rvz-field-collapsed' ?>" id="rvzUsernameField">
+                <label class="form-label">Choose a Username <span class="text-muted small">(new here? this creates your account)</span></label>
+                <input type="text" name="username" id="rvzAuthUsername" class="form-control" value="<?= h($_POST['username'] ?? '') ?>">
+            </div>
+            <div class="mb-3 rvz-field">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" id="rvzAuthPassword" class="form-control" required minlength="8" autocomplete="current-password">
+                <div class="rvz-strength-bar mt-2" id="rvzStrengthBar"><span></span></div>
+            </div>
+            <button class="btn btn-primary w-100 rvz-auth-submit" type="submit" id="rvzAuthSubmit">
+                <span class="rvz-btn-label"><?= $isNewAccount ? 'Create Account' : 'Continue' ?></span>
+            </button>
+        </form>
+
+        <p class="mt-3 text-center" id="rvzSignupPrompt" style="<?= $isNewAccount ? 'display:none;' : '' ?>">
+          New here? <a href="<?= h(base_url('login.php?mode=signup')) ?>" id="rvzSignupLink">Create an account</a>
+        </p>
+
+        <p class="mt-3 text-center small text-muted">
+          Recruiters: sign in the same way above, then click "I'm hiring" in the menu to set up your company workspace.
+        </p>
       </div>
-
-      <div class="text-center text-muted mb-3 rvz-auth-divider"><span>or use your email</span></div>
-
-      <?php foreach ($errors as $e): ?>
-          <div class="alert alert-danger"><?= h($e) ?></div>
-      <?php endforeach; ?>
-
-      <form method="post" id="rvzAuthForm">
-          <?= csrf_field() ?>
-          <input type="hidden" name="next" value="<?= h($next) ?>">
-          <div class="mb-3 rvz-field">
-              <label class="form-label">Email</label>
-              <input type="email" name="email" id="rvzAuthEmail" class="form-control" required autofocus
-                     value="<?= h($_POST['email'] ?? '') ?>">
-          </div>
-          <div class="mb-3 rvz-field rvz-username-field <?= $isNewAccount ? '' : 'rvz-field-collapsed' ?>" id="rvzUsernameField">
-              <label class="form-label">Username <span class="text-muted small">(new here? pick one to create your account)</span></label>
-              <input type="text" name="username" id="rvzAuthUsername" class="form-control" value="<?= h($_POST['username'] ?? '') ?>">
-          </div>
-          <div class="mb-3 rvz-field">
-              <label class="form-label">Password</label>
-              <input type="password" name="password" id="rvzAuthPassword" class="form-control" required minlength="8">
-              <div class="rvz-strength-bar mt-2" id="rvzStrengthBar"><span></span></div>
-          </div>
-          <button class="btn btn-primary w-100 rvz-auth-submit" type="submit" id="rvzAuthSubmit">
-              <span class="rvz-btn-label"><?= $isNewAccount ? 'Create Account' : 'Continue' ?></span>
-          </button>
-      </form>
-
-      <p class="mt-3 text-center" id="rvzSignupPrompt" style="<?= $isNewAccount ? 'display:none;' : '' ?>">
-        New here? <a href="<?= h(base_url('login.php?mode=signup')) ?>" id="rvzSignupLink">Sign up</a>
-      </p>
-
-      <p class="mt-3 text-center small text-muted">
-        Recruiters: sign in the same way above, then click "I'm hiring" in the menu to set up your company workspace.
-      </p>
     </div>
   </div>
 </div>

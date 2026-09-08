@@ -28,7 +28,7 @@ require __DIR__ . '/includes/header.php';
 
 <div class="rvz-marketing-hero text-center">
     <div class="container py-5">
-        <h1 class="display-5 fw-bold mb-3">Connecting South African Talent<br>With the Right Opportunities</h1>
+        <h1 class="display-5 fw-bold mb-3">Connecting South African Talent<br><span class="rvz-gradient-text">With the Right Opportunities</span></h1>
         <p class="lead mb-4" style="max-width:60ch;margin:0 auto;">
             RVZ Personnel Services &amp; Labour Hiring Specialists is part of RVZ International Group —
             built to make hiring and job hunting simpler, faster, and fairer for everyone involved.
@@ -42,8 +42,11 @@ require __DIR__ . '/includes/header.php';
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <input type="text" name="location" placeholder="City, district, or province">
             </div>
+            <input type="hidden" name="employment_type" id="heroEmploymentType" value="">
             <div class="rvz-pill-checks">
-                <label><input type="checkbox" name="remote_only" value="1" id="heroRemoteOnly"> Remote / partially remote</label>
+                <label><input type="checkbox" id="heroFullTime" class="rvz-hero-emptype" data-value="full_time"> Full time</label>
+                <label><input type="checkbox" id="heroPartTime" class="rvz-hero-emptype" data-value="part_time"> Part time</label>
+                <label><input type="checkbox" name="remote_only" value="1" id="heroRemoteOnly"> Partially remote</label>
             </div>
             <button type="submit" class="rvz-pill-cta">Find Jobs</button>
         </form>
@@ -52,6 +55,25 @@ require __DIR__ . '/includes/header.php';
             <a href="<?= h(base_url('signup.php')) ?>" class="btn btn-outline-light btn-lg">I'm Hiring &rarr;</a>
         </div>
     </div>
+    <script>
+    // Full time / Part time map onto the single-value employment_type filter
+    // jobs.php already uses — checking one unchecks the other so the hidden
+    // field always carries a sensible single value (or none, for "any type").
+    (function () {
+        var boxes = document.querySelectorAll('.rvz-hero-emptype');
+        var hidden = document.getElementById('heroEmploymentType');
+        boxes.forEach(function (box) {
+            box.addEventListener('change', function () {
+                if (box.checked) {
+                    boxes.forEach(function (b) { if (b !== box) b.checked = false; });
+                    hidden.value = box.dataset.value;
+                } else {
+                    hidden.value = '';
+                }
+            });
+        });
+    })();
+    </script>
 </div>
 
 <div class="container my-5">

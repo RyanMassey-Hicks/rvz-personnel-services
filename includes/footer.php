@@ -116,6 +116,20 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('<?= h(base_url('service-worker.js')) ?>').catch(() => {});
     });
 }
+// The nav menu is now a floating dropdown panel, not an inline block — close
+// it on an outside click/tap, same as any modern dropdown (Bootstrap's plain
+// collapse component doesn't do this on its own).
+(function () {
+    var toggle = document.querySelector('.rvz-menu-toggle');
+    var panel = document.getElementById('mainNav');
+    if (!toggle || !panel) return;
+    document.addEventListener('click', function (e) {
+        if (!panel.classList.contains('show')) return;
+        if (panel.contains(e.target) || toggle.contains(e.target)) return;
+        bootstrap.Collapse.getOrCreateInstance(panel).hide();
+    });
+})();
+
 document.querySelectorAll('.rvz-back-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
         // Only trust history.back() when the browser recorded a same-site

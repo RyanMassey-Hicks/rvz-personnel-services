@@ -27,6 +27,7 @@
     --rvz-font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
+html { scroll-behavior: smooth; }
 html, body { height: 100%; }
 body {
     background-color: var(--rvz-silver-light);
@@ -82,7 +83,7 @@ main.container { flex: 1 0 auto; }
     --bs-btn-hover-border-color: var(--rvz-navy);
     --bs-btn-active-bg: var(--rvz-navy-dark);
 }
-a { color: var(--rvz-navy); }
+a { color: var(--rvz-navy); transition: color .15s ease; }
 a:hover { color: var(--rvz-blue); }
 .text-primary { color: var(--rvz-navy) !important; }
 .bg-primary { background-color: var(--rvz-navy) !important; }
@@ -102,8 +103,16 @@ a:hover { color: var(--rvz-blue); }
     transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
 .btn:hover { transform: translateY(-1px); box-shadow: var(--rvz-shadow); }
-.btn:active { transform: translateY(0); }
+.btn:active { transform: scale(.97) translateY(0); }
 .btn-lg { font-weight: 700; }
+
+/* ---- Gradient headline text — used sparingly on hero-band H1s for a modern, funkier feel ---- */
+.rvz-gradient-text {
+    background: linear-gradient(100deg, #fff 30%, var(--rvz-silver-blue) 75%, #fff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
 
 /* ---- Badges — pill shape, a little more breathing room ---- */
 .badge { border-radius: var(--rvz-radius-pill); font-weight: 600; letter-spacing: .01em; }
@@ -203,6 +212,100 @@ a:hover { color: var(--rvz-blue); }
 .rvz-navbar .dropdown-item:hover, .rvz-navbar .dropdown-item:focus { background: var(--rvz-silver-light); color: var(--rvz-navy); }
 .rvz-navbar .dropdown-toggle::after { vertical-align: .1em; }
 
+/* ---- Animated hamburger -> X toggle button ---- */
+.rvz-menu-toggle {
+    width: 40px;
+    height: 40px;
+    border: none !important;
+    border-radius: 50%;
+    padding: 0 !important;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, .08);
+    box-shadow: none !important;
+    transition: background-color .2s ease;
+}
+.rvz-menu-toggle:hover { background: rgba(255, 255, 255, .16); }
+.rvz-menu-toggle span {
+    display: block;
+    width: 19px;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+    transition: transform .28s cubic-bezier(.4,0,.2,1), opacity .2s ease, width .2s ease;
+}
+.rvz-menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.rvz-menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; width: 0; }
+.rvz-menu-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ---- Modern floating nav panel — replaces the old full-width inline block
+   that used to push page content down. Anchored under the toggle button,
+   scales/fades in instead, and never disturbs the layout beneath it. ---- */
+.rvz-navbar .container { position: relative; }
+.rvz-navbar-minimal .rvz-menu-panel.navbar-collapse {
+    position: absolute;
+    top: calc(100% + .6rem);
+    right: 0;
+    left: auto;
+    width: min(300px, calc(100vw - 2rem));
+    max-width: 300px;
+    background: #fff;
+    border-radius: var(--rvz-radius);
+    box-shadow: var(--rvz-shadow-lg);
+    padding: .6rem;
+    z-index: 1050;
+    transform-origin: top right;
+}
+.rvz-navbar-minimal .rvz-menu-panel.collapsing {
+    transform: scale(.92) translateY(-6px);
+    opacity: 0;
+    transition: transform .18s ease, opacity .18s ease, height .18s ease;
+    height: 0 !important;
+    overflow: hidden;
+}
+.rvz-navbar-minimal .rvz-menu-panel.show {
+    animation: rvzMenuPop .18s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes rvzMenuPop {
+    from { transform: scale(.92) translateY(-6px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.rvz-menu-panel-label {
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #9aa3b2;
+    padding: .4rem .75rem .3rem;
+}
+.rvz-menu-panel .navbar-nav { gap: .1rem; }
+.rvz-menu-panel .nav-link {
+    color: var(--rvz-navy) !important;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    border-radius: var(--rvz-radius-sm);
+    padding: .65rem .75rem !important;
+    font-weight: 600;
+    transition: background-color .15s ease, color .15s ease, transform .15s ease;
+}
+.rvz-menu-panel .nav-link svg { flex-shrink: 0; color: var(--rvz-silver-blue); transition: color .15s ease; }
+.rvz-menu-panel .nav-link:hover {
+    background: var(--rvz-silver-light);
+    color: var(--rvz-accent) !important;
+    transform: translateX(3px);
+}
+.rvz-menu-panel .nav-link:hover svg { color: var(--rvz-accent); }
+.rvz-menu-panel .nav-link:not(.btn)::after { display: none; }
+.rvz-menu-panel .nav-link.btn { justify-content: center; }
+.rvz-menu-divider { margin: .4rem .25rem; border-color: var(--rvz-silver); opacity: .5; }
+@media (max-width: 400px) {
+    .rvz-navbar-minimal .rvz-menu-panel.navbar-collapse { right: -1rem; width: calc(100vw - 1.5rem); }
+}
+
 /* ---- Notification bell ---- */
 .rvz-notif-badge {
     position: absolute;
@@ -264,6 +367,50 @@ a:hover { color: var(--rvz-blue); }
 /* ---- Entrance animation — used on hero bands and auth cards for a livelier first paint ---- */
 @keyframes rvzFadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .rvz-hero, .rvz-marketing-hero, .rvz-auth-card { animation: rvzFadeInUp .4s ease-out; }
+
+/* ---- Sign in / sign up ---- */
+.rvz-auth-backdrop {
+    position: relative;
+    background: linear-gradient(135deg, var(--rvz-navy) 0%, var(--rvz-blue) 55%, var(--rvz-accent) 140%);
+    border-radius: calc(var(--rvz-radius) * 1.4);
+    padding: clamp(2rem, 6vw, 4.5rem) 1rem;
+    overflow: hidden;
+    isolation: isolate;
+}
+.rvz-auth-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: .5;
+    z-index: -1;
+    animation: rvzBlobFloat 9s ease-in-out infinite;
+}
+.rvz-auth-blob-1 { width: 260px; height: 260px; background: radial-gradient(circle, rgba(255,255,255,.28), transparent 70%); top: -60px; left: -60px; }
+.rvz-auth-blob-2 { width: 220px; height: 220px; background: radial-gradient(circle, rgba(255,255,255,.22), transparent 70%); bottom: -70px; right: -40px; animation-delay: -4s; }
+@keyframes rvzBlobFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(12px, -14px) scale(1.06); }
+}
+.rvz-auth-card {
+    background: #fff;
+    border-radius: calc(var(--rvz-radius) * 1.15);
+    box-shadow: 0 24px 60px rgba(6, 15, 30, .35);
+    padding: clamp(1.75rem, 4vw, 2.5rem);
+}
+.rvz-auth-mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--rvz-navy), var(--rvz-accent));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    box-shadow: var(--rvz-shadow);
+}
+@media (max-width: 575.98px) {
+    .rvz-auth-backdrop { border-radius: var(--rvz-radius); padding: 1.75rem .75rem; }
+}
 
 /* ---- Cards / listings ---- */
 .card {
