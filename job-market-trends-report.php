@@ -38,7 +38,7 @@ function trend_report_render_pdf(array $stats): string
     $pdf->addTextAt(42, 796, COMPANY_LEGAL_NAME . ' (Reg. ' . COMPANY_REG_NUMBER . ')', 8, false, [200, 200, 215]);
 
     // Job market activity
-    $pdf->addPage();
+    $pdf->forceNewPage();
     $pdf->addHeading('Job Market Activity', 18);
     $pdf->addText('All figures below are drawn live from RVZ\'s own platform data — job postings and applications submitted through this site — not a national industry-wide sample.', 9, false, $grey);
     $pdf->addSpacer(8);
@@ -56,7 +56,7 @@ function trend_report_render_pdf(array $stats): string
     trend_report_pdf_bar_chart($pdf, $stats['history']);
 
     // Trending jobs & sectors
-    $pdf->addPage();
+    $pdf->forceNewPage();
     $pdf->addHeading('Trending Jobs', 18);
     if ($stats['top_jobs']) {
         $rank = 1;
@@ -83,7 +83,7 @@ function trend_report_render_pdf(array $stats): string
     }
 
     // Regional
-    $pdf->addPage();
+    $pdf->forceNewPage();
     $pdf->addHeading('Regional Candidate Snapshot', 18);
     $pdf->addText('Where registered candidates on RVZ are based, by province (cumulative, all-time registrations).', 9, false, $grey);
     $pdf->addSpacer(8);
@@ -102,7 +102,6 @@ function trend_report_render_pdf(array $stats): string
     $pdf->addSpacer(20);
     $pdf->addText('This report is compiled from RVZ Personnel Services\' own live platform data and is provided for general informational purposes. For data-related queries, contact ' . GENERAL_INFO_EMAIL . '.', 8, false, $grey);
 
-    $pdf->addWatermarkToAllPages('');
     $pdf->addFooterToAllPages(SITE_NAME . '  |  ' . SITE_URL . '  |  (c) ' . date('Y') . ' ' . COMPANY_LEGAL_NAME);
 
     return $pdf->output();

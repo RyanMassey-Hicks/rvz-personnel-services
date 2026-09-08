@@ -77,6 +77,12 @@ class SimplePdf
         $this->y = $y;
     }
 
+    /** Forces a page break right now — for documents with deliberate page boundaries (e.g. a cover page) rather than relying purely on auto-overflow. */
+    public function forceNewPage(): void
+    {
+        $this->startPage();
+    }
+
     public function addHeading(string $text, float $size = 16): void
     {
         $this->addSpacer(4);
