@@ -43,8 +43,10 @@ CREATE TABLE candidate_profiles (
     location VARCHAR(150) DEFAULT '',
     linkedin_url VARCHAR(255) DEFAULT '',
     resume_path VARCHAR(255) DEFAULT '',
+    resume_text MEDIUMTEXT NULL,
     skills VARCHAR(500) DEFAULT '',
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FULLTEXT INDEX idx_resume_text (resume_text)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE recruiter_profiles (

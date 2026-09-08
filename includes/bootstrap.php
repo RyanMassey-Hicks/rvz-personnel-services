@@ -13,6 +13,7 @@ require $configFile;
 require __DIR__ . '/../config/db.php';
 require __DIR__ . '/functions.php';
 require __DIR__ . '/rate_limit.php';
+require __DIR__ . '/resume_text.php';
 require __DIR__ . '/mailer.php';
 require __DIR__ . '/ai_image.php';
 require __DIR__ . '/gemini_chat.php';

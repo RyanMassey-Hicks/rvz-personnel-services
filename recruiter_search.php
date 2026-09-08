@@ -20,8 +20,17 @@ if ($searched) {
             WHERE users.role = 'candidate'";
     $params = [];
     if ($skills !== '') {
-        $sql .= ' AND candidate_profiles.skills LIKE ?';
+        // Matches the structured Skills field OR anywhere in the candidate's
+        // uploaded resume text (PDF/DOCX) — so a keyword only mentioned
+        // inside the file itself still surfaces the candidate. Boolean mode
+        // (not natural language mode) deliberately: natural language mode
+        // silently returns zero results for any word that appears in more
+        // than 50% of resumes, which would be a confusing trap for common
+        // terms like "experience" or "team" in a small candidate pool.
+        $booleanTerm = trim(preg_replace('/[+\-<>()~*"@]/', ' ', $skills));
+        $sql .= ' AND (candidate_profiles.skills LIKE ? OR MATCH(candidate_profiles.resume_text) AGAINST (? IN BOOLEAN MODE))';
         $params[] = '%' . $skills . '%';
+        $params[] = $booleanTerm;
     }
     if ($location !== '') {
         $sql .= ' AND candidate_profiles.location LIKE ?';
@@ -69,12 +78,13 @@ $pageTitle = 'Direct Search';
 require __DIR__ . '/includes/header.php';
 ?>
 <h2 class="mb-1">Direct Search</h2>
-<p class="text-muted mb-4">Recruit proactively — search RVZ's candidate database and build your talent pipeline for future planning.</p>
+<p class="text-muted mb-4">Recruit proactively — search RVZ's candidate database and build your talent pipeline for future planning.
+The keyword field also searches inside uploaded resume PDFs/Word documents, not just the Skills field.</p>
 
 <?php render_candidate_pool_gauges(candidate_pool_stats()); ?>
 
 <form method="get" class="rvz-search-card row g-2 mb-4">
-    <div class="col-md-3"><input type="text" name="skills" value="<?= h($skills) ?>" class="form-control" placeholder="Skills (e.g. Python, Sales)"></div>
+    <div class="col-md-3"><input type="text" name="skills" value="<?= h($skills) ?>" class="form-control" placeholder="Skills or resume keyword"></div>
     <div class="col-md-3"><input type="text" name="location" value="<?= h($location) ?>" class="form-control" placeholder="Location"></div>
     <div class="col-md-3"><input type="text" name="languages" value="<?= h($languages) ?>" class="form-control" placeholder="Languages"></div>
     <div class="col-md-2 d-flex align-items-center">

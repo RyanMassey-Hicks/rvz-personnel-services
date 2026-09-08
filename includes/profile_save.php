@@ -81,6 +81,7 @@ function save_candidate_profile(array $user, array $profile, array $post, array 
     }
 
     $resumePath = $profile['resume_path'] ?? '';
+    $resumeText = $profile['resume_text'] ?? '';
     if (!empty($files['resume']['name'])) {
         $file = $files['resume'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
@@ -92,8 +93,14 @@ function save_candidate_profile(array $user, array $profile, array $post, array 
             $errors[] = 'Resume must be a PDF or Word document.';
         } else {
             $filename = safe_upload_filename($file['name'], $user['id']);
-            move_uploaded_file($file['tmp_name'], UPLOAD_DIR . 'resumes/' . $filename);
+            $destination = UPLOAD_DIR . 'resumes/' . $filename;
+            move_uploaded_file($file['tmp_name'], $destination);
             $resumePath = 'resumes/' . $filename;
+            // Best-effort — Direct Search can then match a keyword that only
+            // appears inside the file, not just the Skills field. Never
+            // blocks the upload if extraction finds nothing (e.g. a scanned
+            // PDF, or a legacy .doc — see includes/resume_text.php).
+            $resumeText = extract_resume_text($destination, $ext);
         }
     }
 
@@ -126,7 +133,7 @@ function save_candidate_profile(array $user, array $profile, array $post, array 
 
     $stmt = db()->prepare(
         'UPDATE candidate_profiles SET
-            headline = ?, location = ?, linkedin_url = ?, skills = ?, resume_path = ?,
+            headline = ?, location = ?, linkedin_url = ?, skills = ?, resume_path = ?, resume_text = ?,
             phone = ?, id_or_passport = ?, date_of_birth = ?, gender = ?, nationality = ?,
             drivers_license = ?, own_transport = ?, province = ?, postal_code = ?, physical_address = ?,
             professional_summary = ?, languages = ?, salary_expectation_min = ?, salary_expectation_max = ?,
@@ -136,7 +143,7 @@ function save_candidate_profile(array $user, array $profile, array $post, array 
          WHERE user_id = ?'
     );
     $stmt->execute([
-        $headline, $location, $linkedinUrl, $skills, $resumePath,
+        $headline, $location, $linkedinUrl, $skills, $resumePath, $resumeText,
         $phone, $idOrPassport, $dob ?: null, $gender, $nationality,
         $driversLicense, $ownTransport, $province, $postalCode, $physicalAddress,
         $summary, $languages, $salaryMin, $salaryMax,
