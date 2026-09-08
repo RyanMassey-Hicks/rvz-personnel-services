@@ -15,6 +15,16 @@ jobs:
       - name: Install lftp
         run: sudo apt-get update -y && sudo apt-get install -y lftp
 
+      # lftp's --exclude-glob patterns turned out NOT to reliably keep
+      # .git/.github out of the upload (verified live on 2026-09-08: both
+      # ended up as real directories in the public web root on two
+      # separate deploys, despite --exclude-glob .git* below). Deleting
+      # them from the runner's own checkout first is foolproof — there's
+      # nothing left to upload — and only affects this ephemeral runner
+      # copy, not the actual repo/remote.
+      - name: Strip VCS metadata from the checkout before it can be uploaded
+        run: rm -rf .git .github
+
       # Additive-only deploy: uploads new/changed files, overwrites files
       # that changed, and NEVER deletes anything on the server (no --delete
       # flag). config/config.php and uploads/* are gitignored, so they're
@@ -46,8 +56,6 @@ jobs:
           set ftp:ssl-allow no
           set mirror:parallel-transfer-count 4
           mirror --reverse --verbose \
-            --exclude-glob .git* \
-            --exclude-glob .github/ \
             --exclude-glob .gitignore \
             ./ /public_html/recruitment.rvzgroup.co.za/
           LFTP_EOF
