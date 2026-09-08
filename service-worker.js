@@ -4,7 +4,7 @@
  * else (job listings, applications, etc. must never show stale/offline data
  * as if it were current).
  */
-const CACHE_NAME = 'rvz-static-v2';
+const CACHE_NAME = 'rvz-static-v3';
 const STATIC_ASSETS = [
     '/assets/css/style.css',
     '/assets/js/cookie-consent.js',

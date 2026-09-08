@@ -170,17 +170,13 @@ require __DIR__ . '/includes/header.php';
         signupPrompt.style.display = 'none';
     }
 
-    // Reveal the username field once someone starts typing a full-looking email —
-    // purely a UX nudge (nothing is looked up server-side until submit, so this
-    // never reveals whether an account already exists).
-    function maybeRevealUsername() {
-        var looksLikeEmail = /\S+@\S+\.\S+/.test(emailInput.value);
-        if (looksLikeEmail && usernameField.classList.contains('rvz-field-collapsed')) {
-            usernameField.classList.remove('rvz-field-collapsed');
-        }
-    }
-    emailInput.addEventListener('input', maybeRevealUsername);
-    <?php if ($isNewAccount): ?>maybeRevealUsername();<?php endif; ?>
+    // The username field stays collapsed for login — it only appears once we
+    // actually know this is a new account: either the server told us so after
+    // a real submission (no existing user matched, $isNewAccount server-side),
+    // or the visitor explicitly clicked "Create an account" below. It used to
+    // also auto-reveal on any email-shaped input, but that showed the
+    // username field for RETURNING users typing their own email too, which
+    // defeats the point of a dual email/username login field — removed.
 
     // Clicking "Sign up" switches into signup mode instantly, no page reload —
     // the link's href still points to ?mode=signup as a working no-JS fallback.

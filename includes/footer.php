@@ -130,23 +130,38 @@ if ('serviceWorker' in navigator) {
     });
 })();
 
-document.querySelectorAll('.rvz-back-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        // Only trust history.back() when the browser recorded a same-site
-        // page as the referrer — otherwise (direct link, new tab, bookmark,
-        // or arriving from an external site) nothing safe exists to go
-        // back to, so go straight to the fallback instead of risking a
-        // blank page, an external site, or a 404 on a page that no longer
-        // exists.
-        var ref = document.referrer;
-        var isSameSite = ref && ref.indexOf(window.location.origin + '/') === 0;
-        if (isSameSite && window.history.length > 1) {
-            window.history.back();
-        } else {
-            window.location = btn.dataset.fallback;
-        }
+// Back button: tracks the actual same-tab page order in sessionStorage
+// instead of trusting document.referrer, which breaks for the common
+// POST-redirect-GET pattern this app uses everywhere (a form submits to
+// itself, then redirects — the referrer ends up pointing at whichever page
+// last linked here, not necessarily where the visitor "came from" in any
+// meaningful sense). This stack reflects the real path they clicked through.
+(function () {
+    var STORAGE_KEY = 'rvzNavStack';
+    var here = window.location.pathname + window.location.search;
+    var stack = [];
+    try { stack = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { stack = []; }
+    if (stack[stack.length - 1] !== here) {
+        stack.push(here);
+        if (stack.length > 30) stack = stack.slice(-30);
+        try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stack)); } catch (e) {}
+    }
+
+    document.querySelectorAll('.rvz-back-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var current = [];
+            try { current = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) {}
+            current.pop(); // drop the page we're leaving
+            var prev = current[current.length - 1];
+            if (prev) {
+                try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(current)); } catch (e) {}
+                window.location = prev;
+            } else {
+                window.location = btn.dataset.fallback;
+            }
+        });
     });
-});
+})();
 </script>
 <?= $extraJs ?? '' ?>
 </body>

@@ -7,7 +7,7 @@
  * happens fully logged in on this domain.
  *
  * Usage on the external site:
- *   <iframe src="https://www.nhestate.co.za/embed/careers.php"
+ *   <iframe src="https://recruitment.rvzgroup.co.za/embed/careers.php"
  *           style="width:100%;border:0;min-height:800px;" loading="lazy"></iframe>
  */
 require __DIR__ . '/../includes/bootstrap.php';
@@ -101,11 +101,11 @@ $employmentLabels = [
 <?php endif; ?>
 <?php foreach ($jobs as $job): ?>
     <div class="card mb-3 shadow-sm">
-        <div class="card-body d-flex gap-3 align-items-start flex-wrap">
+        <div class="card-body d-flex gap-3 align-items-center flex-wrap">
             <?php if (!empty($job['company_logo'])): ?>
                 <img src="<?= h(UPLOAD_URL . $job['company_logo']) ?>" alt="">
             <?php endif; ?>
-            <div class="flex-grow-1">
+            <div class="flex-grow-1" style="min-width:200px;">
                 <h5 class="mb-1"><a target="_top" href="<?= h(base_url('job.php?id=' . $job['id'])) ?>"><?= h($job['title']) ?></a></h5>
                 <p class="text-muted mb-1 small">
                     <?= h($job['company_name']) ?> &middot; <?= h($job['location']) ?>
@@ -115,8 +115,8 @@ $employmentLabels = [
                 <?php if ($job['salary_min']): ?>
                     <span class="badge bg-success"><?= h(format_zar((float) $job['salary_min'])) ?> - <?= h(format_zar((float) $job['salary_max'])) ?></span>
                 <?php endif; ?>
-                <a target="_top" href="<?= h(base_url('job.php?id=' . $job['id'])) ?>" class="btn btn-sm btn-primary float-end">View &amp; Apply</a>
             </div>
+            <a target="_top" href="<?= h(base_url('job.php?id=' . $job['id'])) ?>" class="btn btn-sm btn-primary flex-shrink-0">Apply Now</a>
         </div>
     </div>
 <?php endforeach; ?>

@@ -205,9 +205,17 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
 </nav>
 
 <main class="container my-4">
-    <button type="button" class="btn btn-sm btn-outline-secondary rvz-back-btn mb-3" data-fallback="<?= h(base_url('index.php')) ?>">
-        &larr; Back
+    <?php
+    // The homepage is the app's own landing point — there's nothing
+    // meaningful to go "back" to from here, so the button is just noise.
+    $isHomePage = basename($_SERVER['SCRIPT_NAME'] ?? '') === 'index.php';
+    ?>
+    <?php if (!$isHomePage): ?>
+    <button type="button" class="btn btn-sm rvz-back-btn mb-3" data-fallback="<?= h(base_url('index.php')) ?>">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
     </button>
+    <?php endif; ?>
     <?php foreach (get_flashes() as $f): ?>
         <div class="alert alert-<?= h($f['type']) ?>"><?= h($f['message']) ?></div>
     <?php endforeach; ?>

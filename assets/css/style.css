@@ -63,6 +63,21 @@ h1, h2, h3, .display-1, .display-2, .display-3, .display-4, .display-5, .display
 main.container { flex: 1 0 auto; }
 .rvz-footer { flex-shrink: 0; }
 
+/* ---- Back button ---- */
+.rvz-back-btn {
+    border: none;
+    background: rgba(10, 31, 68, .07);
+    color: var(--rvz-navy);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem 1rem .45rem .8rem;
+}
+.rvz-back-btn svg { transition: transform .15s ease; }
+.rvz-back-btn:hover { background: rgba(10, 31, 68, .13); color: var(--rvz-navy); }
+.rvz-back-btn:hover svg { transform: translateX(-3px); }
+
 /* ---- Bootstrap color overrides, RVZ palette ---- */
 .btn-primary {
     --bs-btn-bg: var(--rvz-navy);

@@ -1,5 +1,5 @@
 /**
- * Ditto Hire job board embed widget.
+ * RVZ Personnel Services job board embed widget.
  *
  * Drop this on any external website to show live job
  * listings pulled from this ATS, with each job linking back here so people
@@ -7,7 +7,7 @@
  * applicant pipeline, all of it works normally).
  *
  * Usage:
- *   <script src="https://www.nhestate.co.za/embed/widget.js" data-target="rvz-jobs" async></script>
+ *   <script src="https://recruitment.rvzgroup.co.za/embed/widget.js" data-target="rvz-jobs" async></script>
  *   <div id="rvz-jobs"></div>
  *
  * Optional attributes on the <script> tag:
@@ -39,21 +39,33 @@
         return div.innerHTML;
     }
 
+    function formatZar(n) {
+        return 'R' + Number(n).toLocaleString('en-ZA');
+    }
+
     function renderJob(job) {
         var salary = '';
         if (job.salary_min) {
-            salary = '<span class="ditto-job-salary">$' + esc(job.salary_min) +
-                (job.salary_max ? ' - $' + esc(job.salary_max) : '') + '</span>';
+            salary = '<span class="ditto-job-salary">' + esc(formatZar(job.salary_min)) +
+                (job.salary_max ? ' - ' + esc(formatZar(job.salary_max)) : '') + '</span>';
         }
+        // The whole card is clickable, but an explicit Apply button is kept
+        // too — a plain "card is a link" pattern is easy for an embedding
+        // site's own CSS to accidentally neutralise (unset text-decoration,
+        // a global "a { pointer-events: none }" reset, etc.), and a visible
+        // button makes the call to action unambiguous regardless.
         return (
-            '<a class="ditto-job-card" href="' + esc(job.apply_url) + '" target="_blank" rel="noopener">' +
+            '<div class="ditto-job-card">' +
             (job.logo_url ? '<img class="ditto-job-logo" src="' + esc(job.logo_url) + '" alt="">' : '') +
             '<div class="ditto-job-info">' +
-            '<div class="ditto-job-title">' + esc(job.title) + '</div>' +
+            '<a class="ditto-job-title-link" href="' + esc(job.apply_url) + '" target="_blank" rel="noopener">' +
+            '<div class="ditto-job-title">' + esc(job.title) + '</div></a>' +
             '<div class="ditto-job-meta">' + esc(job.company) + ' &middot; ' + esc(job.location) +
             (job.is_remote ? ' &middot; Remote' : '') + '</div>' +
             '<div class="ditto-job-tags"><span class="ditto-job-type">' + esc(job.employment_type) + '</span>' + salary + '</div>' +
-            '</div></a>'
+            '</div>' +
+            '<a class="ditto-job-apply-btn" href="' + esc(job.apply_url) + '" target="_blank" rel="noopener">Apply</a>' +
+            '</div>'
         );
     }
 
@@ -63,16 +75,23 @@
         style.id = 'ditto-jobs-style';
         style.textContent =
             '.ditto-jobs-list{display:flex;flex-direction:column;gap:12px;font-family:system-ui,-apple-system,sans-serif;}' +
-            '.ditto-job-card{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid #e2e2e2;' +
-            'border-radius:8px;text-decoration:none;color:inherit;background:#fff;transition:box-shadow .15s;}' +
+            '.ditto-job-card{display:flex;gap:12px;align-items:center;padding:14px 16px;border:1px solid #e2e2e2;' +
+            'border-radius:8px;background:#fff;transition:box-shadow .15s;}' +
             '.ditto-job-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.08);}' +
             '.ditto-job-logo{width:40px;height:40px;object-fit:contain;flex-shrink:0;}' +
+            '.ditto-job-info{flex:1;min-width:0;}' +
+            '.ditto-job-title-link{text-decoration:none;color:inherit;}' +
+            '.ditto-job-title-link:hover .ditto-job-title{text-decoration:underline;}' +
             '.ditto-job-title{font-weight:600;font-size:1rem;}' +
             '.ditto-job-meta{color:#666;font-size:.875rem;margin-top:2px;}' +
             '.ditto-job-tags{margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;font-size:.75rem;}' +
             '.ditto-job-type{background:#eee;border-radius:4px;padding:2px 8px;}' +
             '.ditto-job-salary{background:#e6f4ea;color:#1e6b34;border-radius:4px;padding:2px 8px;}' +
-            '@media (max-width:480px){.ditto-job-card{flex-direction:column;}}';
+            '.ditto-job-apply-btn{flex-shrink:0;display:inline-block;padding:8px 18px;border-radius:6px;' +
+            'background:#0a1f44;color:#fff;text-decoration:none;font-weight:600;font-size:.875rem;white-space:nowrap;' +
+            'transition:background-color .15s;}' +
+            '.ditto-job-apply-btn:hover{background:#14305f;color:#fff;}' +
+            '@media (max-width:480px){.ditto-job-card{flex-wrap:wrap;}.ditto-job-apply-btn{width:100%;text-align:center;}}';
         document.head.appendChild(style);
     }
 
