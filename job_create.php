@@ -13,8 +13,8 @@ if (!$recruiterProfile || !$recruiterProfile['company_id']) {
 }
 
 $isPaid = has_active_recruiter_subscription($user);
-if (!$isPaid && !can_post_another_job($user)) {
-    flash('info', 'You\'ve used all ' . FREE_TIER_JOB_LIMIT . ' free job posts this month. Upgrade to the Paid plan for unlimited postings.');
+if (!can_post_another_job($user)) {
+    flash('info', 'You don\'t have any job-listing credits left. Buy a package to post a new job.');
     redirect('/pricing.php');
 }
 
@@ -42,21 +42,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($values['employment_type'], ['full_time', 'part_time', 'contract', 'internship'], true)) {
         $errors[] = 'Invalid employment type.';
     }
-    if (!$isPaid && !can_post_another_job($user)) {
-        $errors[] = 'You\'ve used all ' . FREE_TIER_JOB_LIMIT . ' free job posts this month. Upgrade to the Paid plan for unlimited postings.';
+    if (!can_post_another_job($user)) {
+        $errors[] = 'You don\'t have any job-listing credits left. Buy a package to post a new job.';
     }
 
     if (!$errors) {
+        $listingExpiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
         $stmt = db()->prepare(
-            'INSERT INTO jobs (company_id, posted_by, title, description, location, employment_type, salary_min, salary_max, is_remote, is_open, industry_id, use_response_handling)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)'
+            'INSERT INTO jobs (company_id, posted_by, title, description, location, employment_type, salary_min, salary_max, is_remote, is_open, industry_id, use_response_handling, listing_expires_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)'
         );
         $stmt->execute([
             $recruiterProfile['company_id'], $user['id'], $values['title'], $values['description'],
             $values['location'], $values['employment_type'], $values['salary_min'], $values['salary_max'],
             $values['is_remote'] ? 1 : 0, $values['industry_id'], $values['use_response_handling'] ? 1 : 0,
+            $listingExpiresAt,
         ]);
         $jobId = db()->lastInsertId();
+
+        if (!$isPaid) {
+            $purchaseId = consume_recruiter_listing_credit((int) $user['id']);
+            if ($purchaseId) {
+                db()->prepare('UPDATE jobs SET recruiter_purchase_id = ? WHERE id = ?')->execute([$purchaseId, $jobId]);
+            }
+        }
 
         if ($values['use_response_handling']) {
             send_email(

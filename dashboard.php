@@ -77,9 +77,14 @@ require __DIR__ . '/includes/header.php';
         Subscription active — renews <?= h(date('M j, Y', strtotime($sub['current_period_end']))) ?>.
     </div>
 <?php else: ?>
+    <?php $creditsLeft = recruiter_total_credits_remaining((int) $user['id']); ?>
     <div class="alert alert-info">
-        You're on the <strong>Free plan</strong> — <?= $postsThisMonth ?> of <?= FREE_TIER_JOB_LIMIT ?> job posts used this month.
-        <a href="<?= h(base_url('pricing.php')) ?>">Upgrade for unlimited posts</a> plus Ads, website embed, and Direct Search.
+        <?php if ($creditsLeft > 0): ?>
+            You have <strong><?= $creditsLeft ?></strong> job-listing credit<?= $creditsLeft === 1 ? '' : 's' ?> remaining.
+        <?php else: ?>
+            You don't have any job-listing credits left.
+        <?php endif; ?>
+        <a href="<?= h(base_url('pricing.php')) ?>">Buy a package</a> to post more jobs — Ads, website embed and Direct Search are arranged separately, see Pricing.
     </div>
 <?php endif; ?>
 

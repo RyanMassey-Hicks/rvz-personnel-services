@@ -53,6 +53,12 @@ h1, h2, h3, .display-1, .display-2, .display-3, .display-4, .display-5, .display
    collapsed (no navbar-expand-*) regardless of viewport width — the fuller
    link list lives behind the toggle at every screen size, not just mobile. */
 .rvz-navbar-minimal { padding-top: .6rem; padding-bottom: .6rem; }
+/* The always-visible "For Employers" tab that sits next to the Login
+   button for guests — PNet's nav keeps a "For recruiters" link in the
+   same spot rather than burying it in the hamburger, since it's the
+   single highest-value link for the other half of this site's audience. */
+.rvz-for-employers { color: rgba(255,255,255,.85) !important; font-weight: 600; padding-right: .75rem !important; }
+.rvz-for-employers:hover { color: #fff !important; }
 main.container { flex: 1 0 auto; }
 .rvz-footer { flex-shrink: 0; }
 
@@ -650,3 +656,26 @@ img { max-width: 100%; height: auto; }
     border: 1px solid var(--rvz-silver);
     font-weight: 600;
 }
+
+/* ---- Job Market Trends Report ---- */
+.rvz-trends-hero {
+    background: linear-gradient(135deg, var(--rvz-navy), var(--rvz-accent));
+}
+.rvz-trends-barchart {
+    display: flex;
+    align-items: flex-end;
+    gap: .75rem;
+    height: 160px;
+    padding: 1rem 1rem 0;
+    background: var(--rvz-silver-light);
+    border-radius: .75rem;
+    overflow-x: auto;
+}
+.rvz-trends-bar-slot { display: flex; flex-direction: column; align-items: center; gap: .35rem; min-width: 48px; flex: 1; }
+.rvz-trends-bars { display: flex; align-items: flex-end; gap: 3px; height: 110px; }
+.rvz-trends-bar { width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; }
+.rvz-trends-bar-jobs { background: var(--rvz-accent); }
+.rvz-trends-bar-apps { background: var(--rvz-navy); }
+.rvz-legend-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; }
+.rvz-legend-purple { background: var(--rvz-accent); }
+.rvz-legend-navy { background: var(--rvz-navy); margin-left: 1rem; }

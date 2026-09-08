@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('success', 'Your recruiter workspace is ready — free access is enabled for this account.');
                 redirect('/dashboard.php');
             }
-            flash('success', 'Your recruiter workspace is ready! You\'re on the Free plan (' . FREE_TIER_JOB_LIMIT . ' job posts/month) — upgrade any time from the Pricing page for unlimited posts.');
+            flash('success', 'Your recruiter workspace is ready! Buy a job-listing package from the Pricing page to start posting.');
             redirect('/dashboard.php');
         }
     }
@@ -75,9 +75,8 @@ require __DIR__ . '/includes/header.php';
 
 <?php if (!is_privileged_recruiter($user)): ?>
     <div class="alert alert-info">
-        Start free — <?= FREE_TIER_JOB_LIMIT ?> job posts per month at no cost. Upgrade any time for
-        <?= h(format_zar(RECRUITER_MONTHLY_PRICE_ZAR)) ?>/user/month to unlock unlimited posts, AI ad generation,
-        website embedding, and Direct Search. See <a href="<?= h(base_url('pricing.php')) ?>">Pricing</a> for details.
+        Job listings are sold as once-off packages — no subscription. See <a href="<?= h(base_url('pricing.php')) ?>">Pricing</a>
+        for Basic/Standard/Premium packages and what's included.
     </div>
 <?php endif; ?>
 

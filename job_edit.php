@@ -76,6 +76,20 @@ require __DIR__ . '/includes/job_form_fields.php';
     <h2 class="mb-0">Edit <?= h($job['title']) ?></h2>
     <a href="<?= h(base_url('ads.php?job_id=' . $job['id'])) ?>" class="btn btn-outline-primary">Ads</a>
 </div>
+<?php if ($job['listing_expires_at']): ?>
+    <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <span>
+            Listing <?= strtotime($job['listing_expires_at']) > time() ? 'expires' : 'expired' ?>
+            <strong><?= h(date('M j, Y', strtotime($job['listing_expires_at']))) ?></strong>
+        </span>
+        <form method="post" action="<?= h(base_url('paystack/initialize_addon.php')) ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="addon_type" value="extend_listing">
+            <input type="hidden" name="job_id" value="<?= (int) $job['id'] ?>">
+            <button type="submit" class="btn btn-sm btn-outline-primary">Extend 30 Days (<?= h(format_zar(2000)) ?>)</button>
+        </form>
+    </div>
+<?php endif; ?>
 <?php foreach ($errors as $e): ?><div class="alert alert-danger"><?= h($e) ?></div><?php endforeach; ?>
 <form method="post">
     <?= csrf_field() ?>

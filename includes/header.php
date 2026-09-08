@@ -151,6 +151,7 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
                     </ul>
                 </div>
             <?php else: ?>
+                <a class="nav-link rvz-for-employers d-none d-sm-inline-block" href="<?= h(base_url('become_recruiter.php')) ?>">For Employers</a>
                 <a class="btn btn-sm btn-primary text-white" href="<?= h(base_url('login.php')) ?>">Login</a>
             <?php endif; ?>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
@@ -170,8 +171,8 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
                     <a class="nav-link" href="<?= h(base_url('recruiter_search.php')) ?>">Direct Search</a>
                     <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">Pricing</a>
                     <a class="nav-link btn btn-sm btn-primary text-white mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('job_create.php')) ?>">+ Post a Job</a>
-                    <?php if (!has_active_recruiter_subscription($user)): ?>
-                        <a class="nav-link btn btn-sm btn-outline-light mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('pricing.php')) ?>">Upgrade</a>
+                    <?php if (!has_active_recruiter_subscription($user) && recruiter_total_credits_remaining((int) $user['id']) < 1): ?>
+                        <a class="nav-link btn btn-sm btn-outline-light mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('pricing.php')) ?>">Buy Credits</a>
                     <?php endif; ?>
                 <?php endif; ?>
             </div>

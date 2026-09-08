@@ -31,6 +31,11 @@
         <div class="rvz-footer-links small">
             <a href="<?= h(base_url('contact-us.php')) ?>">Contact Us</a>
             <a href="<?= h(base_url('become_recruiter.php')) ?>">For Employers</a>
+            <a href="<?= h(base_url('values.php')) ?>">Values</a>
+            <a href="<?= h(base_url('response-handling.php')) ?>">Response Handling</a>
+            <a href="<?= h(base_url('career-interface.php')) ?>">Career Interface</a>
+            <a href="<?= h(base_url('blog.php')) ?>">Recruiter Blog</a>
+            <a href="<?= h(base_url('job-market-trends-report.php')) ?>">Job Market Trends Report</a>
             <a href="<?= h(base_url('privacy-policy.php')) ?>">Privacy Policy</a>
             <a href="<?= h(base_url('disclaimer.php')) ?>">Disclaimer</a>
             <a href="<?= h(base_url('terms-and-conditions.php')) ?>">Terms and Conditions</a>

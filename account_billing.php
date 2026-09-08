@@ -33,13 +33,52 @@ $stmt = db()->prepare('SELECT * FROM payment_transactions WHERE user_id = ? ORDE
 $stmt->execute([$user['id']]);
 $transactions = $stmt->fetchAll();
 
+$stmt = db()->prepare(
+    'SELECT recruiter_purchases.*, recruiter_packages.name AS package_name
+     FROM recruiter_purchases JOIN recruiter_packages ON recruiter_packages.id = recruiter_purchases.package_id
+     WHERE recruiter_purchases.user_id = ? ORDER BY recruiter_purchases.created_at DESC'
+);
+$stmt->execute([$user['id']]);
+$purchases = $stmt->fetchAll();
+$totalCreditsRemaining = recruiter_total_credits_remaining((int) $user['id']);
+
 $pageTitle = 'Account & Billing';
 require __DIR__ . '/includes/header.php';
 ?>
 <h2 class="mb-4">Account &amp; Billing</h2>
 
 <div class="card mb-4"><div class="card-body">
-    <h5 class="mb-3">Subscription</h5>
+    <h5 class="mb-3">Job-Listing Packages</h5>
+    <?php if ($privileged): ?>
+        <p class="text-muted mb-0">Free recruiter access is active on this account — packages aren't needed.</p>
+    <?php else: ?>
+        <p class="mb-1"><strong><?= $totalCreditsRemaining ?></strong> listing credit<?= $totalCreditsRemaining === 1 ? '' : 's' ?> remaining</p>
+        <?php $accessUntil = recruiter_account_access_expires_at((int) $user['id']); ?>
+        <p class="mb-3 text-muted small"><?= $accessUntil ? 'Account access active until ' . h(date('M j, Y', strtotime($accessUntil))) . '.' : 'No active package.' ?></p>
+        <?php if ($purchases): ?>
+            <div class="table-responsive mb-3">
+            <table class="table table-sm">
+                <thead><tr><th>Package</th><th>Bought</th><th>Credits</th><th>Access Until</th><th>Status</th></tr></thead>
+                <tbody>
+                <?php foreach ($purchases as $p): ?>
+                    <tr>
+                        <td><?= h($p['package_name']) ?></td>
+                        <td><?= h(date('M j, Y', strtotime($p['created_at']))) ?></td>
+                        <td><?= (int) $p['credits_remaining'] ?> / <?= (int) $p['credits_total'] ?></td>
+                        <td><?= $p['access_expires_at'] ? h(date('M j, Y', strtotime($p['access_expires_at']))) : '—' ?></td>
+                        <td><span class="badge <?= $p['status'] === 'active' ? 'bg-success' : 'bg-secondary' ?>"><?= h(ucfirst($p['status'])) ?></span></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+        <?php endif; ?>
+        <a href="<?= h(base_url('pricing.php')) ?>" class="btn btn-primary btn-sm">Buy a Package</a>
+    <?php endif; ?>
+</div></div>
+
+<div class="card mb-4"><div class="card-body">
+    <h5 class="mb-3">Legacy Subscription <span class="badge bg-secondary">Previous plan</span></h5>
     <?php if ($privileged): ?>
         <div class="alert alert-success mb-0">Free recruiter access is active on this account (<?= h($user['email']) ?>) — no billing applies.</div>
     <?php elseif ($isPaid && $companySub && $companySub['status'] === 'active'): ?>
@@ -82,8 +121,7 @@ require __DIR__ . '/includes/header.php';
         <div class="alert alert-secondary">Your subscription is cancelled.</div>
         <a href="<?= h(base_url('subscribe.php')) ?>" class="btn btn-primary btn-sm">Resubscribe</a>
     <?php else: ?>
-        <p class="mb-3">You're on the <strong>Free plan</strong> — <?= $postsThisMonth ?> of <?= FREE_TIER_JOB_LIMIT ?> job posts used this month.</p>
-        <a href="<?= h(base_url('pricing.php')) ?>" class="btn btn-primary btn-sm">Upgrade</a>
+        <p class="text-muted mb-0">No legacy subscription on this account — see Job-Listing Packages above.</p>
     <?php endif; ?>
 </div></div>
 

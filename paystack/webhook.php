@@ -75,6 +75,48 @@ switch ($type) {
     // Covers both the first payment and every recurring monthly renewal
     // charge Paystack makes automatically against the saved card.
     case 'charge.success':
+        $purpose = $data['metadata']['purpose'] ?? '';
+
+        if ($purpose === 'package_purchase') {
+            $userId = webhook_find_user_id($data);
+            $packageId = (int) ($data['metadata']['package_id'] ?? 0);
+            $reference = $data['reference'] ?? '';
+            if ($userId && $packageId && $reference) {
+                $stmt = db()->prepare('SELECT id FROM payment_transactions WHERE reference = ?');
+                $stmt->execute([$reference]);
+                if (!$stmt->fetch()) {
+                    db()->prepare(
+                        'INSERT INTO payment_transactions (user_id, reference, amount_cents, status, paystack_event, raw_response) VALUES (?, ?, ?, "success", ?, ?)'
+                    )->execute([$userId, $reference, (int) ($data['amount'] ?? 0), $type, json_encode($event)]);
+                }
+                $stmt = db()->prepare('SELECT * FROM recruiter_packages WHERE id = ?');
+                $stmt->execute([$packageId]);
+                $package = $stmt->fetch();
+                if ($package) {
+                    activate_package_purchase($reference, $userId, $package);
+                }
+            }
+            break;
+        }
+
+        if ($purpose === 'addon_purchase') {
+            $userId = webhook_find_user_id($data);
+            $reference = $data['reference'] ?? '';
+            $addonType = $data['metadata']['addon_type'] ?? '';
+            $jobId = $data['metadata']['job_id'] ?? null;
+            if ($userId && $reference && $addonType) {
+                $stmt = db()->prepare('SELECT id FROM payment_transactions WHERE reference = ?');
+                $stmt->execute([$reference]);
+                if (!$stmt->fetch()) {
+                    db()->prepare(
+                        'INSERT INTO payment_transactions (user_id, reference, amount_cents, status, paystack_event, raw_response) VALUES (?, ?, ?, "success", ?, ?)'
+                    )->execute([$userId, $reference, (int) ($data['amount'] ?? 0), $type, json_encode($event)]);
+                }
+                activate_addon_purchase($reference, $userId, $addonType, $jobId ? (int) $jobId : null, (int) ($data['amount'] ?? 0));
+            }
+            break;
+        }
+
         $companyId = webhook_find_company_id($data);
         $userId = $companyId ? null : webhook_find_user_id($data);
 

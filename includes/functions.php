@@ -345,7 +345,7 @@ function company_has_embed_access(int $companyId): bool
     return $row && $row['company_id'] && (int) $row['company_id'] === $companyId;
 }
 
-/** How many jobs this recruiter has posted so far in the current calendar month — used for the Free plan's post limit. */
+/** How many jobs this recruiter has posted so far in the current calendar month — kept for legacy Free-plan subscribers only (see can_post_another_job()). */
 function jobs_posted_this_month(int $userId): int
 {
     $stmt = db()->prepare(
@@ -355,7 +355,44 @@ function jobs_posted_this_month(int $userId): int
     return (int) $stmt->fetch()['c'];
 }
 
-/** True if this recruiter can post another job right now — unlimited on the Paid plan, capped at FREE_TIER_JOB_LIMIT/month on Free. */
+/** This recruiter's currently-active, unused-credit package purchases, soonest-expiring first (so credits are consumed oldest-purchase-first). */
+function recruiter_active_purchases(int $userId): array
+{
+    $stmt = db()->prepare(
+        "SELECT * FROM recruiter_purchases
+         WHERE user_id = ? AND status = 'active' AND credits_remaining > 0 AND access_expires_at > NOW()
+         ORDER BY access_expires_at ASC"
+    );
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll();
+}
+
+function recruiter_total_credits_remaining(int $userId): int
+{
+    $stmt = db()->prepare(
+        "SELECT COALESCE(SUM(credits_remaining), 0) AS c FROM recruiter_purchases
+         WHERE user_id = ? AND status = 'active' AND access_expires_at > NOW()"
+    );
+    $stmt->execute([$userId]);
+    return (int) $stmt->fetch()['c'];
+}
+
+/** The furthest-out account-access deadline across this recruiter's active packages, or null if they have none. */
+function recruiter_account_access_expires_at(int $userId): ?string
+{
+    $stmt = db()->prepare(
+        "SELECT MAX(access_expires_at) AS d FROM recruiter_purchases WHERE user_id = ? AND status = 'active' AND access_expires_at > NOW()"
+    );
+    $stmt->execute([$userId]);
+    return $stmt->fetch()['d'] ?: null;
+}
+
+/**
+ * True if this recruiter can post another job right now — via free/legacy
+ * subscriber access (has_active_recruiter_subscription(), unchanged), or via
+ * having at least one unused listing credit from a purchased package (the
+ * current Basic/Standard/Premium once-off model — see pricing.php).
+ */
 function can_post_another_job(?array $user = null): bool
 {
     $user = $user ?? current_user();
@@ -365,7 +402,48 @@ function can_post_another_job(?array $user = null): bool
     if (has_active_recruiter_subscription($user)) {
         return true;
     }
-    return jobs_posted_this_month((int) $user['id']) < FREE_TIER_JOB_LIMIT;
+    return recruiter_total_credits_remaining((int) $user['id']) > 0;
+}
+
+/** Consumes one listing credit from this recruiter's oldest active package purchase — call once, right after a job is successfully inserted. Returns the purchase id used, or null if paid via free/legacy access. */
+function consume_recruiter_listing_credit(int $userId): ?int
+{
+    $purchases = recruiter_active_purchases($userId);
+    if (!$purchases) {
+        return null;
+    }
+    $purchase = $purchases[0];
+    db()->prepare('UPDATE recruiter_purchases SET credits_remaining = credits_remaining - 1 WHERE id = ?')
+        ->execute([$purchase['id']]);
+    return (int) $purchase['id'];
+}
+
+/**
+ * Auto-closes any job whose 30-day listing period has lapsed (see
+ * jobs.listing_expires_at, set in job_create.php and extendable via the
+ * "extend listing" add-on). Runs probabilistically on a small fraction of
+ * requests (same pattern as rate_limit_allow()'s log pruning) rather than on
+ * every page load, and doesn't depend on the optional cPanel cron job ever
+ * being set up — a job goes offline on time either way.
+ */
+function expire_stale_listings(): void
+{
+    if (random_int(1, 30) !== 1) {
+        return;
+    }
+    db()->exec(
+        "UPDATE jobs SET is_open = 0, closed_at = NOW()
+         WHERE is_open = 1 AND listing_expires_at IS NOT NULL AND listing_expires_at <= NOW()"
+    );
+}
+
+/** Same as current_recruiter_company_id() but for an arbitrary user id — needed by webhook.php, which has no session. */
+function current_recruiter_company_id_for_user(int $userId): ?int
+{
+    $stmt = db()->prepare('SELECT company_id FROM recruiter_profiles WHERE user_id = ?');
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch();
+    return $row && $row['company_id'] ? (int) $row['company_id'] : null;
 }
 
 /**
@@ -392,7 +470,7 @@ function require_active_recruiter(): void
 {
     require_recruiter_with_sla();
     if (!has_active_recruiter_subscription()) {
-        flash('info', 'This feature is part of the Paid plan — upgrade for unlimited access.');
+        flash('info', 'This feature is arranged directly with our team rather than sold as a self-serve package — see "Looking for More?" on the Pricing page or contact us.');
         redirect('/pricing.php');
     }
 }

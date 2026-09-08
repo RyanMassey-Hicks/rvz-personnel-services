@@ -19,3 +19,5 @@ require __DIR__ . '/ai_image.php';
 require __DIR__ . '/gemini_chat.php';
 require __DIR__ . '/pdf.php';
 require __DIR__ . '/webpush.php';
+require __DIR__ . '/trends.php';
+expire_stale_listings();

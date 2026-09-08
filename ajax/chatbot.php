@@ -52,14 +52,14 @@ function chatbot_account_facts(): array
         $applicantCount = (int) $stmt->fetch()['c'];
 
         $isPaid = has_active_recruiter_subscription($user);
-        $postsThisMonth = $isPaid ? null : jobs_posted_this_month((int) $user['id']);
+        $creditsRemaining = $isPaid ? null : recruiter_total_credits_remaining((int) $user['id']);
 
         return [
             'logged_in' => true,
             'role' => 'recruiter',
             'first_name' => $user['first_name'] ?: $user['username'],
             'is_paid' => $isPaid,
-            'posts_this_month' => $postsThisMonth,
+            'credits_remaining' => $creditsRemaining,
             'active_jobs' => $activeJobs,
             'applicant_count' => $applicantCount,
         ];
@@ -132,33 +132,34 @@ function chatbot_reply(string $message, array $facts): string
     }
 
     if (preg_match('/\b(ads?|advertisement|social media (ad|graphic))\b/i', $m)) {
-        return 'The "Ads" button on a job (Dashboard → your job → Ads) generates a branded social media ad graphic for that listing — this is a Paid-plan feature.';
+        return 'The "Ads" button on a job (Dashboard → your job → Ads) generates a branded social media ad graphic for that listing — arranged directly with our team, see Pricing → "Looking for More?".';
     }
 
     if (preg_match('/\b(direct search|talent pool|search candidates?|find candidates?)\b/i', $m)) {
-        return 'Direct Search lets recruiters search the full candidate database by skills, location, or language, and save candidates to a Talent Pool — this is a Paid-plan feature, available from the Dashboard.';
+        return 'Direct Search lets recruiters search the full candidate database by skills, location, or language, and save candidates to a Talent Pool — this is arranged directly with our team, not a self-serve package. See Pricing → "Looking for More?" or contact us.';
     }
 
     if (preg_match('/\b(team|invite|seat|colleague|co-?worker)\b/i', $m)) {
-        return 'You can invite teammates from Settings → Teams. Paid seats are billed as one combined monthly amount to the account holder — anyone beyond your paid seats simply stays on the Free plan until you add more seats.';
+        return 'You can invite teammates from Settings → Teams. Each job listing is posted using a credit from your purchased package, regardless of which team member posts it.';
     }
 
     if (preg_match('/\b(free plan|upgrade|pricing|how much|cost|price)\b/i', $m)) {
         if (($facts['role'] ?? '') === 'recruiter') {
             if ($facts['is_paid']) {
-                return "You're currently on the Paid plan — unlimited job posts plus Ads, website embed, and Direct Search. Manage or cancel any time from Account & Billing.";
+                return "You're currently on our legacy monthly plan — unlimited job posts plus Ads, website embed, and Direct Search. Manage or cancel any time from Account & Billing.";
             }
-            return "You're on the Free plan — {$facts['posts_this_month']} of " . FREE_TIER_JOB_LIMIT . ' job posts used this month. Upgrade any time from the Pricing page for unlimited posts, Ads, website embed, and Direct Search.';
+            $credits = $facts['credits_remaining'] ?? 0;
+            return "You have {$credits} job-listing credit(s) remaining. See the Pricing page for Basic/Standard/Premium once-off packages — no subscription required.";
         }
-        return 'Recruiting starts free — ' . FREE_TIER_JOB_LIMIT . ' job posts a month at no cost. Upgrade any time for ' . h(format_zar(RECRUITER_MONTHLY_PRICE_ZAR)) . '/user/month for unlimited posts plus more tools. See the Pricing page for full details.';
+        return 'Recruiters buy once-off job-listing packages (Basic/Standard/Premium) — no subscription. See the Pricing page for full details, pricing and what\'s included.';
     }
 
     if (preg_match('/\b(subscri\w*|billing|cancel\w*|invoice|payment|charge|refund|downgrade)\b/i', $m)) {
         if (($facts['role'] ?? '') === 'recruiter') {
-            $status = $facts['is_paid'] ? 'active on the Paid plan' : 'on the Free plan (no billing active)';
-            return "Your account is currently {$status}. You can view invoices, upgrade, or cancel & downgrade to Free any time from Account & Billing — cancellation takes effect immediately with no further charges.";
+            $status = $facts['is_paid'] ? 'active on our legacy monthly plan' : (($facts['credits_remaining'] ?? 0) . ' job-listing credit(s) remaining');
+            return "Your account currently has: {$status}. You can view payment history or buy more packages any time from Account & Billing / Pricing — packages are once-off, there's nothing to cancel.";
         }
-        return 'Billing only applies to recruiter accounts — see Account & Billing (in the account menu) once you\'re signed in as a recruiter for plan and payment details.';
+        return 'Billing only applies to recruiter accounts — see Account & Billing (in the account menu) once you\'re signed in as a recruiter for package and payment details.';
     }
 
     if (preg_match('/\b(sla|service level agreement|sign.*agreement)\b/i', $m)) {
@@ -170,7 +171,7 @@ function chatbot_reply(string $message, array $facts): string
     }
 
     if (preg_match('/\b(i.?m hiring|become a recruiter|post a job|recruiter account)\b/i', $m)) {
-        return 'Click "I\'m hiring" in the menu, set up your company workspace, and you\'re straight onto the Free plan (' . FREE_TIER_JOB_LIMIT . ' job posts/month) — no payment needed to get started.';
+        return 'Click "For Employers" or "I\'m hiring" in the menu, set up your company workspace, then buy a job-listing package from the Pricing page to start posting — once-off, no subscription.';
     }
 
     return "I'm not 100% sure about that one from what I've got on file. Try rephrasing, or click \"Escalate to Support\" below and our team will get back to you directly.";

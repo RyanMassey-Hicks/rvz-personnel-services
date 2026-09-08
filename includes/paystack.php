@@ -281,3 +281,123 @@ function activate_company_subscription(int $companyId, int $seats, array $data):
 
     db()->prepare('UPDATE companies SET seat_quantity = ? WHERE id = ?')->execute([$seats, $companyId]);
 }
+
+// --- Once-off listing packages (Basic/Standard/Premium) & add-ons ----------
+// Replaces the Free/monthly-subscription model above for NEW purchases —
+// see recruiter_packages/recruiter_purchases in schema.sql. The old
+// subscription tables/functions above are left untouched so any recruiter
+// who was already on the monthly plan keeps working exactly as before;
+// nothing here cancels or migrates them automatically.
+
+/** Starts a once-off Paystack checkout for a job-listing package. */
+function paystack_initialize_package_purchase(array $package, array $user, string $callbackUrl): array
+{
+    $reference = 'rvz_pkg_' . $user['id'] . '_' . bin2hex(random_bytes(8));
+    $amountCents = (int) $package['price_cents'];
+
+    $payload = [
+        'email' => $user['email'],
+        'amount' => $amountCents,
+        'currency' => 'ZAR',
+        'reference' => $reference,
+        'callback_url' => $callbackUrl,
+        'metadata' => [
+            'user_id' => $user['id'],
+            'package_id' => $package['id'],
+            'purpose' => 'package_purchase',
+        ],
+    ];
+    $result = paystack_request('POST', '/transaction/initialize', $payload);
+
+    $stmt = db()->prepare(
+        'INSERT INTO payment_transactions (user_id, reference, amount_cents, status, raw_response) VALUES (?, ?, ?, "pending", ?)'
+    );
+    $stmt->execute([$user['id'], $reference, $amountCents, json_encode($result['body'])]);
+
+    if (empty($result['body']['status']) || empty($result['body']['data']['authorization_url'])) {
+        $message = $result['body']['message'] ?? 'Unknown error starting checkout.';
+        throw new RuntimeException('Paystack initialize failed: ' . $message);
+    }
+
+    return ['reference' => $reference, 'authorization_url' => $result['body']['data']['authorization_url']];
+}
+
+/** Records a completed package purchase — grants listing credits + account access days. */
+function activate_package_purchase(string $reference, int $userId, array $package): void
+{
+    $stmt = db()->prepare('SELECT id FROM recruiter_purchases WHERE reference = ?');
+    $stmt->execute([$reference]);
+    if ($stmt->fetch()) {
+        return; // already activated (webhook + callback can both fire for the same reference)
+    }
+    $accessExpires = date('Y-m-d H:i:s', strtotime('+' . (int) $package['access_days'] . ' days'));
+    db()->prepare(
+        'INSERT INTO recruiter_purchases (user_id, package_id, reference, amount_cents, status, credits_total, credits_remaining, access_expires_at)
+         VALUES (?, ?, ?, ?, "active", ?, ?, ?)'
+    )->execute([
+        $userId, $package['id'], $reference, $package['price_cents'],
+        $package['listing_credits'], $package['listing_credits'], $accessExpires,
+    ]);
+}
+
+/** Starts a once-off Paystack checkout for an "Additional Online Feature" add-on. */
+function paystack_initialize_addon_purchase(string $addonType, int $amountCents, array $user, ?int $jobId, string $callbackUrl): array
+{
+    $reference = 'rvz_addon_' . $user['id'] . '_' . bin2hex(random_bytes(8));
+
+    $payload = [
+        'email' => $user['email'],
+        'amount' => $amountCents,
+        'currency' => 'ZAR',
+        'reference' => $reference,
+        'callback_url' => $callbackUrl,
+        'metadata' => [
+            'user_id' => $user['id'],
+            'addon_type' => $addonType,
+            'job_id' => $jobId,
+            'purpose' => 'addon_purchase',
+        ],
+    ];
+    $result = paystack_request('POST', '/transaction/initialize', $payload);
+
+    $stmt = db()->prepare(
+        'INSERT INTO payment_transactions (user_id, reference, amount_cents, status, raw_response) VALUES (?, ?, ?, "pending", ?)'
+    );
+    $stmt->execute([$user['id'], $reference, $amountCents, json_encode($result['body'])]);
+
+    if (empty($result['body']['status']) || empty($result['body']['data']['authorization_url'])) {
+        $message = $result['body']['message'] ?? 'Unknown error starting checkout.';
+        throw new RuntimeException('Paystack initialize failed: ' . $message);
+    }
+
+    return ['reference' => $reference, 'authorization_url' => $result['body']['data']['authorization_url']];
+}
+
+/** Applies a completed add-on purchase — extends a listing by 30 days, or unlocks the company presentation. */
+function activate_addon_purchase(string $reference, int $userId, string $addonType, ?int $jobId, int $amountCents): void
+{
+    $stmt = db()->prepare('SELECT id FROM addon_purchases WHERE reference = ?');
+    $stmt->execute([$reference]);
+    if ($stmt->fetch()) {
+        return;
+    }
+    db()->prepare(
+        'INSERT INTO addon_purchases (user_id, job_id, addon_type, reference, amount_cents, status) VALUES (?, ?, ?, ?, ?, "completed")'
+    )->execute([$userId, $jobId, $addonType, $reference, $amountCents]);
+
+    if ($addonType === 'extend_listing' && $jobId) {
+        $stmt = db()->prepare('SELECT listing_expires_at FROM jobs WHERE id = ? AND posted_by = ?');
+        $stmt->execute([$jobId, $userId]);
+        $job = $stmt->fetch();
+        if ($job) {
+            $base = ($job['listing_expires_at'] && strtotime($job['listing_expires_at']) > time()) ? $job['listing_expires_at'] : date('Y-m-d H:i:s');
+            $newExpiry = date('Y-m-d H:i:s', strtotime($base . ' +30 days'));
+            db()->prepare('UPDATE jobs SET listing_expires_at = ? WHERE id = ?')->execute([$newExpiry, $jobId]);
+        }
+    } elseif ($addonType === 'company_presentation') {
+        $companyId = current_recruiter_company_id_for_user($userId);
+        if ($companyId) {
+            db()->prepare('UPDATE companies SET presentation_purchased = 1 WHERE id = ?')->execute([$companyId]);
+        }
+    }
+}

@@ -485,6 +485,100 @@ CREATE TABLE IF NOT EXISTS rate_limit_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =================================================================
+-- Migration 2026-09 — recruiter blog, once-off listing packages
+-- (replacing the Free/monthly-subscription pricing model), and the
+-- Job Market Trends Report (built entirely from live queries against
+-- existing tables — jobs, applications, candidate_profiles — no new
+-- tables needed for that feature).
+-- =================================================================
+
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(190) NOT NULL UNIQUE,
+    title VARCHAR(200) NOT NULL,
+    excerpt VARCHAR(400) DEFAULT '',
+    body LONGTEXT NOT NULL,
+    author_name VARCHAR(100) DEFAULT 'RVZ Personnel Services',
+    is_published TINYINT(1) NOT NULL DEFAULT 1,
+    published_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Once-off job-listing packages (Basic/Standard/Premium) — replaces the old
+-- Free-tier + R2500/month subscription model. A package grants a fixed
+-- number of job-listing credits plus a fixed number of days of account
+-- access; each listing posted against it stays live 30 days (extendable —
+-- see addon_purchases below).
+CREATE TABLE IF NOT EXISTS recruiter_packages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(30) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    price_cents INT NOT NULL,
+    listing_credits INT NOT NULL,
+    access_days INT NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    active TINYINT(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO recruiter_packages (code, name, price_cents, listing_credits, access_days, sort_order)
+SELECT * FROM (SELECT 'basic' AS code, 'Basic' AS name, 250000 AS price_cents, 1 AS listing_credits, 35 AS access_days, 1 AS sort_order) v
+WHERE NOT EXISTS (SELECT 1 FROM recruiter_packages WHERE code = 'basic');
+INSERT INTO recruiter_packages (code, name, price_cents, listing_credits, access_days, sort_order)
+SELECT * FROM (SELECT 'standard', 'Standard', 550000, 2, 70, 2) v
+WHERE NOT EXISTS (SELECT 1 FROM recruiter_packages WHERE code = 'standard');
+INSERT INTO recruiter_packages (code, name, price_cents, listing_credits, access_days, sort_order)
+SELECT * FROM (SELECT 'premium', 'Premium', 950000, 3, 105, 3) v
+WHERE NOT EXISTS (SELECT 1 FROM recruiter_packages WHERE code = 'premium');
+
+-- One row per package a recruiter has bought. credits_remaining is
+-- decremented each time a job is posted against this purchase (see
+-- job_create.php); access_expires_at is the account-access deadline
+-- (35/70/105 days from purchase, per package).
+CREATE TABLE IF NOT EXISTS recruiter_purchases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    package_id INT NOT NULL,
+    reference VARCHAR(100) NOT NULL UNIQUE,
+    amount_cents INT NOT NULL,
+    status ENUM('pending','active','expired') NOT NULL DEFAULT 'pending',
+    credits_total INT NOT NULL,
+    credits_remaining INT NOT NULL,
+    access_expires_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (package_id) REFERENCES recruiter_packages(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- "Additional Online Features" a la carte add-ons.
+CREATE TABLE IF NOT EXISTS addon_purchases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    job_id INT NULL,
+    addon_type ENUM('extend_listing','company_presentation') NOT NULL,
+    reference VARCHAR(100) NOT NULL UNIQUE,
+    amount_cents INT NOT NULL,
+    status ENUM('pending','completed') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS recruiter_purchase_id INT NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS listing_expires_at DATETIME NULL;
+SET @fk_exists = (
+    SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'jobs_recruiter_purchase_fk'
+);
+SET @sql = IF(@fk_exists = 0,
+    'ALTER TABLE jobs ADD CONSTRAINT jobs_recruiter_purchase_fk FOREIGN KEY (recruiter_purchase_id) REFERENCES recruiter_purchases(id) ON DELETE SET NULL',
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS presentation_purchased TINYINT(1) NOT NULL DEFAULT 0;
+
+-- =================================================================
 -- Optional seed data
 -- =================================================================
 -- Safe to run more than once (checks for an existing row first, since
@@ -505,3 +599,29 @@ SELECT 'RVZ Personnel Services & Labour Hiring Specialists', ''
 WHERE NOT EXISTS (
     SELECT 1 FROM companies WHERE name = 'RVZ Personnel Services & Labour Hiring Specialists'
 );
+
+-- A handful of original launch articles for the Recruiter Blog, so the
+-- section isn't empty on day one. Original RVZ-authored content.
+INSERT INTO blog_posts (slug, title, excerpt, body, published_at)
+SELECT 'writing-job-ads-that-attract-the-right-candidates',
+       'Writing Job Ads That Attract the Right Candidates',
+       'Five practical changes to a job ad that measurably improve who applies — not just how many people apply.',
+       'A job ad that gets 200 applications isn''t automatically a good job ad if 190 of them are unqualified. The goal isn''t volume, it''s fit.\n\nStart with the first two lines. Most candidates decide whether to keep reading in the first two lines of your ad, so lead with what the role actually involves day to day, not a generic paragraph about company culture.\n\nBe specific about requirements. "3+ years'' experience with Excel and basic bookkeeping" filters far better than "detail-oriented team player." Vague requirements attract vague applicants.\n\nState the salary range where you can. Candidates increasingly skip ads that hide pay entirely, and it saves both sides time during screening.\n\nList the practical details. Location, remote/hybrid/on-site, employment type and start date all belong near the top, not buried in a paragraph.\n\nEnd with a clear next step. Tell candidates exactly what happens after they apply — that alone reduces drop-off during your screening process.',
+       NOW()
+WHERE NOT EXISTS (SELECT 1 FROM blog_posts WHERE slug = 'writing-job-ads-that-attract-the-right-candidates');
+
+INSERT INTO blog_posts (slug, title, excerpt, body, published_at)
+SELECT 'reducing-time-to-hire-without-cutting-corners',
+       'Reducing Time-to-Hire Without Cutting Corners',
+       'A slow hiring process loses good candidates to faster-moving competitors. Here''s how to tighten yours safely.',
+       'Every extra week a vacancy stays open costs money and momentum — and your strongest candidates are usually the ones with other offers on the table, so they''re the first to walk away from a slow process.\n\nScreen against a checklist, not a gut feeling. Deciding in advance what "qualified" looks like for a specific role removes a huge amount of second-guessing later in the process.\n\nBatch your interviews. Reviewing five candidates in one sitting is faster and more consistent than reviewing them one at a time across two weeks.\n\nUse a shared pipeline. When everyone involved in a hiring decision can see where each candidate stands, you avoid the back-and-forth emails that quietly add days to a process.\n\nDecide your interview stages before you start, not during. Adding an extra round mid-process because someone wasn''t sure is one of the most common (and avoidable) sources of delay.\n\nNone of this means rushing a decision — it means removing the friction that has nothing to do with decision quality.',
+       NOW()
+WHERE NOT EXISTS (SELECT 1 FROM blog_posts WHERE slug = 'reducing-time-to-hire-without-cutting-corners');
+
+INSERT INTO blog_posts (slug, title, excerpt, body, published_at)
+SELECT 'what-response-handling-actually-solves',
+       'What Response Handling Actually Solves',
+       'Outsourcing your first-pass screening isn''t about being hands-off — it''s about spending your time where it matters most.',
+       'Most hiring managers don''t dislike interviewing — they dislike the hours spent reading through applications that were never going to be a fit in the first place.\n\nResponse Handling exists for that specific gap: a dedicated team advertises your vacancy, reads every application against your stated criteria, and hands you a shortlist instead of an inbox. You still make every hiring decision — you''re just making it from a filtered list instead of a raw one.\n\nIt tends to matter most for two kinds of roles: high-volume postings where the sheer number of applications is the bottleneck, and specialist roles where screening requires knowing exactly what to look for on a CV.\n\nIf you''re currently spending more time reading applications than interviewing candidates, that''s usually the clearest sign it''s worth trying.',
+       NOW()
+WHERE NOT EXISTS (SELECT 1 FROM blog_posts WHERE slug = 'what-response-handling-actually-solves');

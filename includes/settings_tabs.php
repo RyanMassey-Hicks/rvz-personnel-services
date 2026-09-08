@@ -10,6 +10,7 @@ function render_settings_tabs(string $active): void
     ];
     if (is_privileged_recruiter($user)) {
         $tabs['site'] = ['label' => 'Site Settings', 'url' => 'site_settings.php'];
+        $tabs['blog'] = ['label' => 'Blog', 'url' => 'blog_admin.php'];
     }
     ?>
     <ul class="nav nav-tabs mb-4">
