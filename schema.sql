@@ -525,10 +525,10 @@ INSERT INTO recruiter_packages (code, name, price_cents, listing_credits, access
 SELECT * FROM (SELECT 'basic' AS code, 'Basic' AS name, 250000 AS price_cents, 1 AS listing_credits, 35 AS access_days, 1 AS sort_order) v
 WHERE NOT EXISTS (SELECT 1 FROM recruiter_packages WHERE code = 'basic');
 INSERT INTO recruiter_packages (code, name, price_cents, listing_credits, access_days, sort_order)
-SELECT * FROM (SELECT 'standard', 'Standard', 550000, 2, 70, 2) v
+SELECT * FROM (SELECT 'standard' AS code, 'Standard' AS name, 550000 AS price_cents, 2 AS listing_credits, 70 AS access_days, 2 AS sort_order) v
 WHERE NOT EXISTS (SELECT 1 FROM recruiter_packages WHERE code = 'standard');
 INSERT INTO recruiter_packages (code, name, price_cents, listing_credits, access_days, sort_order)
-SELECT * FROM (SELECT 'premium', 'Premium', 950000, 3, 105, 3) v
+SELECT * FROM (SELECT 'premium' AS code, 'Premium' AS name, 950000 AS price_cents, 3 AS listing_credits, 105 AS access_days, 3 AS sort_order) v
 WHERE NOT EXISTS (SELECT 1 FROM recruiter_packages WHERE code = 'premium');
 
 -- One row per package a recruiter has bought. credits_remaining is
