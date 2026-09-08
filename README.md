@@ -8,16 +8,27 @@ a cPanel account on Host Africa (host-h.net) infrastructure, running a LAMP
 stack (Linux, Apache, MySQL/MariaDB, PHP). Every step below uses the real
 cPanel tool names.
 
-> **Confirmed host details for this site:**
-> - cPanel login: `https://nhestate.co.za:2083` (or your host-h.net
->   reseller's cPanel URL — ask your host if the port is different)
-> - Account home / interim path: `/usr/www/users/nhestvnbej/` — note this
->   is **not** the web root; your files must go inside
->   `/usr/www/users/nhestvnbej/public_html/`
+> **Confirmed host details for this site (current, since 2026-09-08):**
+> - Live URL: `https://recruitement.rvzgroup.co.za` (note the spelling —
+>   intentional, not a typo; a correctly-spelled sibling subdomain also
+>   exists but is unused)
+> - Account home: `/public_html/recruitement.rvzgroup.co.za/` — this is
+>   **one subfolder inside a much larger shared cPanel account** that
+>   also hosts the main rvzgroup.co.za corporate site (portal, payments,
+>   blog, shop, vendor-portal, divisions, etc.) as sibling folders. Every
+>   deploy — manual or via `.github/workflows/deploy.yml` — MUST stay
+>   scoped to this one subfolder.
 > - Interim/temporary URL (works before DNS/SSL are fully live):
->   `http://nhestate.co.za.www6.jnb3.host-h.net`
-> - MySQL database host: `sql63.jnb2.host-h.net` (**not** `localhost` —
+>   `http://recruitement.rvzgroup.co.za.www6.jnb3.host-h.net`
+> - MySQL database host: `sql21.jnb2.host-h.net` (**not** `localhost` —
 >   see the note in Section 4)
+>
+> **Previously hosted at `nhestate.co.za`** (own separate cPanel account,
+> DB host `sql63.jnb2.host-h.net`) until migrated here on 2026-09-08. That
+> account is untouched and still fully live/functional — nothing was
+> deleted — but no longer receives deploys from this repo. Any `nhestate.co.za`
+> URLs still appearing below are historical setup notes from that original
+> install and no longer reflect where this app actually runs.
 
 ## What you get
 
@@ -88,17 +99,20 @@ component to worry about mixing in on this hosting account.
 
 > **This repo now deploys automatically.** Pushing to `main` on GitHub
 > triggers `.github/workflows/deploy.yml`, which uploads every changed
-> file straight to `public_html` over FTP — no manual upload needed for
-> day-to-day changes. It's additive-only (uses `lftp mirror --reverse`
-> with no `--delete`), so it never touches `config/config.php` or
-> `uploads/` (both are gitignored and therefore never part of the
-> checkout it deploys). Required repo secrets: `FTP_SERVER`,
-> `FTP_USERNAME`, `FTP_PASSWORD` (Settings → Secrets and variables →
-> Actions). The manual steps below are still useful for the *first-ever*
-> upload (config.php doesn't exist on a fresh server yet) or if you ever
-> need to deploy without GitHub.
+> file straight to `public_html/recruitement.rvzgroup.co.za/` over FTP —
+> no manual upload needed for day-to-day changes. It's additive-only
+> (uses `lftp mirror --reverse` with no `--delete`), so it never touches
+> `config/config.php` or `uploads/` (both are gitignored and therefore
+> never part of the checkout it deploys). Required repo secrets:
+> `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (Settings → Secrets and
+> variables → Actions) — these point at the `recruitement.rvzgroup.co.za`
+> account, not the original `nhestate.co.za` one. The manual steps below
+> are still useful for the *first-ever* upload (config.php doesn't exist
+> on a fresh server yet) or if you ever need to deploy without GitHub.
 >
-> First automated deploy: 2026-09-07 (secrets fixed and retested same day).
+> First automated deploy: 2026-09-07, to nhestate.co.za. Repointed to
+> recruitement.rvzgroup.co.za on 2026-09-08 after the full site+DB
+> migration described above.
 
 1. In cPanel, open **File Manager** (or use an FTP/SFTP client such as
    FileZilla — your FTP login details are in cPanel under **FTP Accounts**).
