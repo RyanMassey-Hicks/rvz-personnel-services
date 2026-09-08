@@ -481,10 +481,65 @@ img { max-width: 100%; height: auto; }
 
 /* ---- Marketing homepage ---- */
 .rvz-marketing-hero {
-    background: linear-gradient(120deg, var(--rvz-navy) 0%, var(--rvz-navy-dark) 100%);
+    background: linear-gradient(135deg, var(--rvz-navy) 0%, var(--rvz-blue) 60%, var(--rvz-accent) 145%);
     color: #fff;
 }
 .rvz-hero-search { max-width: 700px; }
+
+/* ---- PNet-style search-first hero: stacked pill fields + big CTA ---- */
+.rvz-pill-search { max-width: 480px; }
+.rvz-pill-field { position: relative; margin-bottom: .75rem; }
+.rvz-pill-field svg {
+    position: absolute;
+    left: 1.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--rvz-silver-blue);
+    pointer-events: none;
+}
+.rvz-pill-field input {
+    width: 100%;
+    border: none;
+    border-radius: var(--rvz-radius-pill);
+    padding: .95rem 1.25rem .95rem 2.9rem;
+    font-size: 1rem;
+    font-family: var(--rvz-font-body);
+    box-shadow: var(--rvz-shadow-lg);
+}
+.rvz-pill-field input:focus {
+    outline: none;
+    box-shadow: var(--rvz-shadow-lg), 0 0 0 .2rem rgba(255, 122, 26, .35);
+}
+.rvz-pill-checks {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: .25rem 0 1rem;
+}
+.rvz-pill-checks label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    color: #fff;
+    font-size: .9rem;
+    cursor: pointer;
+}
+.rvz-pill-cta {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: var(--rvz-radius-pill);
+    padding: 1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: var(--rvz-font-display);
+    color: #fff;
+    background: var(--rvz-accent);
+    box-shadow: var(--rvz-shadow-lg);
+    transition: transform .15s ease, background-color .15s ease;
+}
+.rvz-pill-cta:hover { background: var(--rvz-accent-dark); transform: translateY(-1px); color: #fff; }
 .rvz-mv-card { border-top: 4px solid var(--rvz-navy); transition: border-color .2s ease, transform .2s ease; }
 .rvz-mv-card:hover { border-top-color: var(--rvz-accent); transform: translateY(-2px); }
 .rvz-mv-icon { font-size: 2rem; margin-bottom: .25rem; }
