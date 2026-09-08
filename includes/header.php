@@ -115,16 +115,49 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
     <?= $extraHead ?? '' ?>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark rvz-navbar">
-    <div class="container">
-        <a class="navbar-brand rvz-brandmark" href="<?= h(base_url('index.php')) ?>">
+<nav class="navbar navbar-dark rvz-navbar rvz-navbar-minimal">
+    <div class="container d-flex align-items-center justify-content-between flex-nowrap">
+        <a class="navbar-brand rvz-brandmark me-2" href="<?= h(base_url('index.php')) ?>">
             <img src="<?= h(base_url('assets/img/logo-mark-white.png')) ?>" alt="<?= h(SITE_NAME) ?>" height="38">
             <span class="word">Personnel Services<small>Labour Hiring Specialists</small></span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <?php if ($user): ?>
+                <?php require __DIR__ . '/notifications_widget.php'; render_notification_bell($user); ?>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <?= h($user['first_name'] ?: 'Account') ?>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <?php if ($user['role'] === 'recruiter'): ?>
+                            <li><a class="dropdown-item" href="<?= h(base_url('recruiter_profile.php')) ?>">My Profile</a></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('company_branding.php')) ?>">Settings</a></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('account_billing.php')) ?>">Account &amp; Billing</a></li>
+                            <?php if (is_privileged_recruiter($user)): ?>
+                                <li><a class="dropdown-item" href="<?= h(base_url('support_tickets.php')) ?>">Support Tickets</a></li>
+                                <li><a class="dropdown-item" href="<?= h(base_url('admin_integrations.php')) ?>">Admin: Integrations</a></li>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <li><a class="dropdown-item" href="<?= h(base_url('my_applications.php')) ?>">My Applications</a></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('saved_jobs.php')) ?>">Saved Jobs</a></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('profile.php')) ?>">Profile</a></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('documents.php')) ?>">Documents</a></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('my_cv.php')) ?>">My CV</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?= h(base_url('become_recruiter.php')) ?>">I'm hiring &rarr;</a></li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<?= h(base_url('logout.php')) ?>">Logout</a></li>
+                    </ul>
+                </div>
+            <?php else: ?>
+                <a class="btn btn-sm btn-primary text-white" href="<?= h(base_url('login.php')) ?>">Login</a>
+            <?php endif; ?>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
         <div class="collapse navbar-collapse" id="mainNav">
             <div class="navbar-nav ms-auto align-items-lg-center">
                 <?php if (!$user || $user['role'] !== 'recruiter'): ?>
@@ -132,51 +165,14 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
                     <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">Pricing</a>
                     <a class="nav-link" href="<?= h(base_url('jobs.php')) ?>">Browse Jobs</a>
                 <?php endif; ?>
-                <?php if ($user): ?>
-                    <?php if ($user['role'] === 'recruiter'): ?>
-                        <a class="nav-link" href="<?= h(base_url('dashboard.php')) ?>">Dashboard</a>
-                        <a class="nav-link" href="<?= h(base_url('recruiter_search.php')) ?>">Direct Search</a>
-                        <a class="nav-link btn btn-sm btn-primary text-white mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('job_create.php')) ?>">+ Post a Job</a>
-                        <?php if (!has_active_recruiter_subscription($user)): ?>
-                            <a class="nav-link btn btn-sm btn-outline-light mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('pricing.php')) ?>">Upgrade</a>
-                        <?php endif; ?>
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <?= h($user['first_name'] ?: 'Account') ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="<?= h(base_url('recruiter_profile.php')) ?>">My Profile</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('company_branding.php')) ?>">Settings</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('account_billing.php')) ?>">Account &amp; Billing</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('pricing.php')) ?>">Pricing</a></li>
-                                <?php if (is_privileged_recruiter($user)): ?>
-                                    <li><a class="dropdown-item" href="<?= h(base_url('support_tickets.php')) ?>">Support Tickets</a></li>
-                                    <li><a class="dropdown-item" href="<?= h(base_url('admin_integrations.php')) ?>">Admin: Integrations</a></li>
-                                <?php endif; ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('logout.php')) ?>">Logout</a></li>
-                            </ul>
-                        </div>
-                    <?php else: ?>
-                        <a class="nav-link" href="<?= h(base_url('saved_jobs.php')) ?>">Saved Jobs</a>
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <?= h($user['first_name'] ?: 'My Account') ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="<?= h(base_url('my_applications.php')) ?>">My Applications</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('profile.php')) ?>">Profile</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('documents.php')) ?>">Documents</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('my_cv.php')) ?>">My CV</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('become_recruiter.php')) ?>">I'm hiring &rarr;</a></li>
-                                <li><a class="dropdown-item" href="<?= h(base_url('logout.php')) ?>">Logout</a></li>
-                            </ul>
-                        </div>
+                <?php if ($user && $user['role'] === 'recruiter'): ?>
+                    <a class="nav-link" href="<?= h(base_url('dashboard.php')) ?>">Dashboard</a>
+                    <a class="nav-link" href="<?= h(base_url('recruiter_search.php')) ?>">Direct Search</a>
+                    <a class="nav-link" href="<?= h(base_url('pricing.php')) ?>">Pricing</a>
+                    <a class="nav-link btn btn-sm btn-primary text-white mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('job_create.php')) ?>">+ Post a Job</a>
+                    <?php if (!has_active_recruiter_subscription($user)): ?>
+                        <a class="nav-link btn btn-sm btn-outline-light mx-lg-2 my-1 my-lg-0" href="<?= h(base_url('pricing.php')) ?>">Upgrade</a>
                     <?php endif; ?>
-                    <?php require __DIR__ . '/notifications_widget.php'; render_notification_bell($user); ?>
-                <?php else: ?>
-                    <a class="nav-link btn btn-sm btn-primary text-white ms-lg-2" href="<?= h(base_url('login.php')) ?>">Login</a>
                 <?php endif; ?>
             </div>
         </div>

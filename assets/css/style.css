@@ -13,8 +13,8 @@
     --rvz-silver-light: #eef1f6;
     --rvz-black: #0d0d0f;
     --rvz-white: #ffffff;
-    --rvz-accent: #ff7a1a;
-    --rvz-accent-dark: #e2650a;
+    --rvz-accent: #7c3aed;
+    --rvz-accent-dark: #5b21b6;
     --rvz-success: #1f9d55;
     --rvz-warning: #c98a1f;
     --rvz-danger: #c9302c;
@@ -49,6 +49,10 @@ h1, h2, h3, .display-1, .display-2, .display-3, .display-4, .display-5, .display
 /* Sticky footer: on short pages the footer sits at the bottom of the
    viewport instead of floating up right under sparse content. */
 .rvz-navbar { flex-shrink: 0; }
+/* PNet-style minimal nav: logo + account/login + hamburger only, always
+   collapsed (no navbar-expand-*) regardless of viewport width — the fuller
+   link list lives behind the toggle at every screen size, not just mobile. */
+.rvz-navbar-minimal { padding-top: .6rem; padding-bottom: .6rem; }
 main.container { flex: 1 0 auto; }
 .rvz-footer { flex-shrink: 0; }
 
