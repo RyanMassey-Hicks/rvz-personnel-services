@@ -26,10 +26,17 @@ jobs:
       # IMPORTANT: this FTP account's public_html hosts the ENTIRE main
       # rvzgroup.co.za corporate site (portal, payments, blog, shop,
       # vendor-portal, divisions, etc.) as siblings of this app's own
-      # recruitement.rvzgroup.co.za subfolder. The target path below MUST
+      # recruitment.rvzgroup.co.za subfolder. The target path below MUST
       # stay scoped to that one subfolder — deploying to bare /public_html/
       # would overwrite an entirely different, unrelated live application.
-      - name: Upload to recruitement.rvzgroup.co.za (never deletes, never touches sibling folders)
+      #
+      # NOTE: this was originally deployed to the misspelled
+      # recruitement.rvzgroup.co.za subfolder (2026-09-08). Repointed to
+      # the correctly-spelled recruitment.rvzgroup.co.za the same day,
+      # after discovering the correct-spelling subdomain was still an
+      # unused cPanel placeholder. The old misspelled subfolder now just
+      # holds a redirect (see .htaccess) — see README.
+      - name: Upload to recruitment.rvzgroup.co.za (never deletes, never touches sibling folders)
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -42,9 +49,9 @@ jobs:
             --exclude-glob .git* \
             --exclude-glob .github/ \
             --exclude-glob .gitignore \
-            ./ /public_html/recruitement.rvzgroup.co.za/
+            ./ /public_html/recruitment.rvzgroup.co.za/
           LFTP_EOF
 
       - name: Verify site is responding
         run: |
-          curl -sf -o /dev/null -w "Site responded: %{http_code}\n" "https://recruitement.rvzgroup.co.za/index.php"
+          curl -sf -o /dev/null -w "Site responded: %{http_code}\n" "https://recruitment.rvzgroup.co.za/index.php"

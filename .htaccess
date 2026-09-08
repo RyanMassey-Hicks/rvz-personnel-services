@@ -15,26 +15,31 @@ Options -Indexes
 # lands on the site without "www.", which is extremely common (typed
 # URLs, old links, etc.).
 #
-# This same repo is deployed to two hosts during the move from
-# nhestate.co.za to recruitement.rvzgroup.co.za (see README), each with
-# its own canonical form (old = www required, new = bare required), so
-# both rules live here side by side. Delete the nhestate.co.za block
-# once the move is fully complete and that host is retired.
+# This same repo/file is manually kept in sync across every host this app
+# has ever lived on (see README) so each one redirects correctly no matter
+# which physical folder Apache actually routes a given hostname to. Delete
+# a host's block once that host is fully retired and no longer resolves.
 RewriteEngine On
 
-# --- nhestate.co.za (being retired — see README) ---
+# --- nhestate.co.za (previous host, being retired — see README) ---
 RewriteCond %{HTTP_HOST} ^nhestate\.co\.za$ [NC]
 RewriteRule ^ https://www.nhestate.co.za%{REQUEST_URI} [L,R=301]
 RewriteCond %{HTTPS} off
 RewriteCond %{HTTP_HOST} ^(www\.)?nhestate\.co\.za$ [NC]
 RewriteRule ^ https://www.nhestate.co.za%{REQUEST_URI} [L,R=301]
 
-# --- recruitement.rvzgroup.co.za (current) ---
-RewriteCond %{HTTP_HOST} ^www\.recruitement\.rvzgroup\.co\.za$ [NC]
-RewriteRule ^ https://recruitement.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
-RewriteCond %{HTTPS} off
+# --- recruitement.rvzgroup.co.za (misspelled subdomain, briefly live
+#     2026-09-08 before the correct spelling was deployed to instead —
+#     kept only as a redirect so the short-lived typo URL isn't dead) ---
 RewriteCond %{HTTP_HOST} ^(www\.)?recruitement\.rvzgroup\.co\.za$ [NC]
-RewriteRule ^ https://recruitement.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
+RewriteRule ^ https://recruitment.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
+
+# --- recruitment.rvzgroup.co.za (current, correctly spelled) ---
+RewriteCond %{HTTP_HOST} ^www\.recruitment\.rvzgroup\.co\.za$ [NC]
+RewriteRule ^ https://recruitment.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^(www\.)?recruitment\.rvzgroup\.co\.za$ [NC]
+RewriteRule ^ https://recruitment.rvzgroup.co.za%{REQUEST_URI} [L,R=301]
 
 # Note: error display is intentionally controlled in config/config.php via
 # DEBUG_MODE (ini_set), not here. A raw php_flag directive at the site
