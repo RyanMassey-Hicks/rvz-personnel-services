@@ -1,0 +1,28 @@
+# Prevents Apache from showing a raw file listing if someone requests a
+# folder with no index.php in it (e.g. /assets/). Standard shared-hosting
+# hardening, and "Options -Indexes" is supported on both Apache 2.2 and
+# 2.4 with no special syntax needed.
+
+Options -Indexes
+
+# Canonicalize every request to https://www.nhestate.co.za — matching
+# SITE_URL in config/config.php. Without this, a visitor landing on the
+# bare domain (or over http://) gets pages whose AJAX calls (chatbot,
+# live notifications, etc.) target the www origin via base_url(), which
+# the browser then blocks as cross-origin (CORS) since the page itself
+# loaded on a different host. Discovered 2026-08-28 while live-testing the
+# chatbot on the bare domain — it silently broke both the chatbot and the
+# notification poll for anyone who ever lands on nhestate.co.za without
+# "www.", which is extremely common (typed URLs, old links, etc.).
+RewriteEngine On
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^nhestate\.co\.za$ [NC]
+RewriteRule ^ https://www.nhestate.co.za%{REQUEST_URI} [L,R=301]
+
+# Note: error display is intentionally controlled in config/config.php via
+# DEBUG_MODE (ini_set), not here. A raw php_flag directive at the site
+# root would break every single page with a 500 error on hosts that run
+# PHP via PHP-FPM/suPHP instead of mod_php (see uploads/.htaccess for the
+# same issue in more detail) — not a risk worth taking at the root level
+# just to add a second layer of the same protection config.php already
+# handles correctly.
