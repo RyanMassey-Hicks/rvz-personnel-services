@@ -31,6 +31,8 @@
         <div class="rvz-footer-links small">
             <a href="<?= h(base_url('contact-us.php')) ?>">Contact Us</a>
             <a href="<?= h(base_url('become_recruiter.php')) ?>">For Employers</a>
+            <a href="<?= h(base_url('applications-guide.php')) ?>">Applications</a>
+            <a href="<?= h(base_url('payment-options.php')) ?>">Payment Options</a>
             <a href="<?= h(base_url('values.php')) ?>">Values</a>
             <a href="<?= h(base_url('response-handling.php')) ?>">Response Handling</a>
             <a href="<?= h(base_url('career-interface.php')) ?>">Career Interface</a>
@@ -45,6 +47,10 @@
             <a href="<?= h(base_url('employment-equity-policy.php')) ?>">Employment Equity Policy</a>
             <a href="<?= h(base_url('electronic-transactions-policy.php')) ?>">Electronic Transactions Policy</a>
             <a href="<?= h(base_url('rica-policy.php')) ?>">RICA Policy</a>
+            <a href="<?= h(base_url('confidentiality-policy.php')) ?>">Confidentiality Policy</a>
+            <a href="<?= h(base_url('shipping-delivery-policy.php')) ?>">Shipping &amp; Delivery Policy</a>
+            <a href="<?= h(base_url('whistleblowing-policy.php')) ?>">Whistleblowing Policy</a>
+            <a href="<?= h(base_url('report-grievance.php')) ?>">Report a Grievance</a>
             <a href="<?= h(base_url('cookie-policy.php')) ?>">Cookie Policy</a>
             <a href="#" id="rvzCookiePrefsLink">Cookie Preferences</a>
             <a href="<?= h(base_url('copyright-notice.php')) ?>">Copyright Notice</a>
