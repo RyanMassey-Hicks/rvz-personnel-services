@@ -37,32 +37,42 @@ or OpenAI — for recruiter-initiated ad creation, the on-site support chatbot w
 Google Gemini to generate a reply, Google Analytics for usage statistics, Google Ads for conversion tracking and
 remarketing, and email delivery) strictly to operate the Platform. Google Analytics, Google Ads, and the AI
 support chatbot are opt-in only, controlled via the "Cookie Preferences" link in the footer — see our
-<a href="<?= h(base_url('cookie-policy.php')) ?>">Cookie Policy</a> for details.</p>
+<a href="<?= h(base_url('cookie-policy.php')) ?>">Cookie Policy</a> for details, and our
+<a href="<?= h(base_url('ai-policy.php')) ?>">AI Policy</a> for how AI features are used and what they never decide
+on their own.</p>
 
 <h5 class="mt-4">5. Special personal information</h5>
 <p>Employment Equity fields (race/EE status, disability status) are special personal information under POPIA.
 We only collect and process this information where you have given explicit, separate consent on your profile,
 and only for Employment Equity reporting purposes where an employer requires it.</p>
 
-<h5 class="mt-4">6. Data retention</h5>
+<h5 class="mt-4">6. Cross-border transfers</h5>
+<p>Some of our service providers process data outside South Africa — for example, Paystack's payment
+infrastructure, Google (Gemini, Analytics, Ads), and OpenAI where a company configures it. Where personal
+information is transferred across South Africa's borders, we only do so consistent with section 72 of POPIA:
+the provider is bound by terms that require a comparable standard of protection to POPIA, or you have consented
+to the transfer, or the transfer is necessary to perform our contract with you (for example, processing a
+payment).</p>
+
+<h5 class="mt-4">7. Data retention</h5>
 <p>We retain your personal information for as long as your account is active, and for a reasonable period
 afterwards to comply with legal, tax, and record-keeping obligations. You may request deletion of your account
 and associated data at any time via <a href="<?= h(base_url('contact-us.php')) ?>">Contact Us</a>.</p>
 
-<h5 class="mt-4">7. Your rights</h5>
+<h5 class="mt-4">8. Your rights</h5>
 <p>Under POPIA, you have the right to access, correct, or request deletion of your personal information, to
 object to processing, and to withdraw consent at any time (for example, by unsubscribing from job alerts or
 the newsletter). To exercise these rights, contact us using the details on our
 <a href="<?= h(base_url('contact-us.php')) ?>">Contact Us</a> page.</p>
 
-<h5 class="mt-4">8. Cookies</h5>
+<h5 class="mt-4">9. Cookies</h5>
 <p>See our <a href="<?= h(base_url('cookie-policy.php')) ?>">Cookie Policy</a> for details on how we use cookies.</p>
 
-<h5 class="mt-4">9. Security</h5>
+<h5 class="mt-4">10. Security</h5>
 <p>We use reasonable technical and organisational measures — including password hashing, encrypted connections,
 and access controls — to protect your personal information against loss, unauthorised access, and disclosure.</p>
 
-<h5 class="mt-4">10. Contact / Information Officer</h5>
+<h5 class="mt-4">11. Contact / Information Officer</h5>
 <p>Questions about this policy or your personal information can be directed to our Information Officer via
 <a href="mailto:<?= h(PRIVILEGED_RECRUITER_EMAIL) ?>"><?= h(PRIVILEGED_RECRUITER_EMAIL) ?></a> or through our
 <a href="<?= h(base_url('contact-us.php')) ?>">Contact Us</a> page. You also have the right to lodge a complaint

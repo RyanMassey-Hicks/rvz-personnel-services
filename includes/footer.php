@@ -40,6 +40,11 @@
             <a href="<?= h(base_url('disclaimer.php')) ?>">Disclaimer</a>
             <a href="<?= h(base_url('terms-and-conditions.php')) ?>">Terms and Conditions</a>
             <a href="<?= h(base_url('paia.php')) ?>">PAIA Manual</a>
+            <a href="<?= h(base_url('ai-policy.php')) ?>">AI Policy</a>
+            <a href="<?= h(base_url('labour-relations-policy.php')) ?>">Labour Relations Policy</a>
+            <a href="<?= h(base_url('employment-equity-policy.php')) ?>">Employment Equity Policy</a>
+            <a href="<?= h(base_url('electronic-transactions-policy.php')) ?>">Electronic Transactions Policy</a>
+            <a href="<?= h(base_url('rica-policy.php')) ?>">RICA Policy</a>
             <a href="<?= h(base_url('cookie-policy.php')) ?>">Cookie Policy</a>
             <a href="#" id="rvzCookiePrefsLink">Cookie Preferences</a>
             <a href="<?= h(base_url('copyright-notice.php')) ?>">Copyright Notice</a>
