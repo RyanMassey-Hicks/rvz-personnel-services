@@ -23,29 +23,70 @@ class AiImageException extends RuntimeException {}
  */
 function pollinations_generate_image(string $prompt): array
 {
-    $url = 'https://image.pollinations.ai/prompt/' . rawurlencode($prompt)
-        . '?width=1024&height=1024&nologo=true&model=flux&seed=' . random_int(1, 999999999);
+    // Pollinations is free and keyless, which also means it's flaky: observed
+    // live returning HTTP 500s, and HTTP 200s with a completely empty body.
+    // Those failures come back fast (~1-2s), so there's budget to retry —
+    // first with a fresh seed on the higher-quality "flux" model, then on
+    // "turbo", which runs on different infrastructure and is a genuinely
+    // independent fallback rather than just the same request again.
+    //
+    // One overall time budget is shared across attempts, and each attempt's
+    // cURL timeout is capped to whatever is left of it. The hard ceiling
+    // here is NOT PHP's max_execution_time (set_time_limit() is honoured on
+    // this host) but the web server in front of it, which was observed live
+    // returning a 503 once a request passed ~60s — so this call runs in its
+    // own request (ajax/ad_render.php) and must finish, including file write
+    // and DB insert, inside that. A *successful* Pollinations render is
+    // routinely 40-45s, so 50s fits one slow success or a fast-fail retry.
+    // (It used to be a single 90s timeout bundled in the same request as
+    // Gemini planning, which could get the whole thing killed with nothing
+    // shown to the recruiter at all.)
+    $attempts = [
+        ['model' => 'flux'],
+        ['model' => 'flux'],
+        ['model' => 'turbo'],
+    ];
+    $totalBudget = 50;
+    $started = microtime(true);
+    $lastError = 'Unknown error';
 
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 90,
-        CURLOPT_FOLLOWLOCATION => true,
-    ]);
-    $raw = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $contentType = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-    $err = curl_error($ch);
-    curl_close($ch);
+    foreach ($attempts as $i => $attempt) {
+        $remaining = $totalBudget - (microtime(true) - $started);
+        if ($remaining < 8) {
+            break; // not enough time left for a meaningful attempt
+        }
 
-    if ($raw === false) {
-        throw new AiImageException('Could not reach the free image generator: ' . $err);
+        $url = 'https://image.pollinations.ai/prompt/' . rawurlencode($prompt)
+            . '?width=1024&height=1024&nologo=true&model=' . $attempt['model'] . '&seed=' . random_int(1, 999999999);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => (int) floor($remaining),
+            CURLOPT_FOLLOWLOCATION => true,
+        ]);
+        $raw = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($raw === false) {
+            $lastError = 'Could not reach the free image generator: ' . $err;
+        } elseif ($status !== 200 || strpos($contentType, 'image/') !== 0) {
+            $lastError = 'The free image generator did not return an image (HTTP ' . $status . ').';
+        } elseif ($raw === '') {
+            // HTTP 200 with an empty body — without this check it silently
+            // saved and displayed as a broken/blank image with no error.
+            $lastError = 'The free image generator returned an empty image.';
+        } else {
+            $mime = strpos($contentType, 'image/png') !== false ? 'image/png' : 'image/jpeg';
+            return ['bytes' => $raw, 'mime' => $mime];
+        }
+        error_log('[ai_image] Pollinations attempt ' . ($i + 1) . ' (' . $attempt['model'] . ') failed: ' . $lastError);
     }
-    if ($status !== 200 || strpos($contentType, 'image/') !== 0) {
-        throw new AiImageException('The free image generator did not return an image (HTTP ' . $status . '). Please try again.');
-    }
-    $mime = strpos($contentType, 'image/png') !== false ? 'image/png' : 'image/jpeg';
-    return ['bytes' => $raw, 'mime' => $mime];
+
+    throw new AiImageException($lastError . ' The free image service is having trouble right now — please try again in a moment.');
 }
 
 /**
@@ -196,7 +237,11 @@ function gemini_generate_ad_content(string $jobTitle, string $companyName, strin
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 28,
+        // Short on purpose: this is a fallback-able planning step, not the
+        // main event — failing fast here leaves the image-generation call
+        // below enough of the 60s PHP execution budget to actually complete
+        // (see pollinations_generate_image()'s own timeout comment).
+        CURLOPT_TIMEOUT => 12,
         CURLOPT_HTTPHEADER => [
             'x-goog-api-key: ' . GEMINI_API_KEY,
             'Content-Type: application/json',

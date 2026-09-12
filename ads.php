@@ -1,13 +1,23 @@
 <?php
+/**
+ * "Create a social ad" — AI-generated 1:1 social media graphic for a job.
+ *
+ * Generation runs as two separate AJAX requests (ajax/ad_plan.php, then
+ * ajax/ad_render.php) rather than one synchronous POST. This host's web
+ * server returns a 503 for any request over ~60s, and Gemini planning plus
+ * a Pollinations render (routinely 40-45s) in a single request was hitting
+ * that — the recruiter saw "Service Unavailable" with nothing generated.
+ * Split in two, each request stays well inside the limit, and the page can
+ * show real progress while it waits.
+ */
 require __DIR__ . '/includes/bootstrap.php';
 require_active_recruiter();
 
 $user = current_user();
-$jobId = (int) ($_GET['job_id'] ?? $_POST['job_id'] ?? 0);
+$jobId = (int) ($_GET['job_id'] ?? 0);
 
 $stmt = db()->prepare(
-    'SELECT jobs.*, companies.name AS company_name, companies.ai_image_provider,
-            companies.ai_image_api_key_encrypted, companies.ai_brand_guidelines
+    'SELECT jobs.*, companies.name AS company_name, companies.ai_image_provider, companies.ai_brand_guidelines
      FROM jobs
      JOIN companies ON companies.id = jobs.company_id
      WHERE jobs.id = ? AND jobs.company_id = ?'
@@ -17,49 +27,6 @@ $job = $stmt->fetch();
 if (!$job) {
     http_response_code(404);
     die('Job not found, or you do not have permission to create ads for it.');
-}
-
-$error = null;
-$generated = null;
-$generatedCopy = null;
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_verify();
-    $style = trim($_POST['style'] ?? 'professional') ?: 'professional';
-    $brandGuidelines = $job['ai_brand_guidelines'] ?? '';
-
-    // Two free AI systems working together: Gemini (text) plans a caption
-    // and a vivid scene description; the image provider (Pollinations by
-    // default) renders that scene. If Gemini's unavailable for any reason,
-    // fall back to the plain templated prompt — image generation still works.
-    $adCopy = null;
-    try {
-        $content = gemini_generate_ad_content($job['title'], $job['company_name'], $job['location'], $style, $brandGuidelines);
-        $adCopy = $content['copy'];
-        $prompt = build_ad_prompt_from_scene($content['scene'], $job['title'], $job['company_name'], $style);
-    } catch (AiImageException $e) {
-        error_log('Gemini ad-content fallback: ' . $e->getMessage());
-        $prompt = build_ad_prompt($job, $job['company_name'], $style, $brandGuidelines);
-    }
-
-    try {
-        $result = ai_generate_image_for_company($prompt, $job);
-        $ext = $result['mime'] === 'image/jpeg' ? 'jpg' : 'png';
-        $filename = 'ad_' . $jobId . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
-        $destDir = UPLOAD_DIR . 'ads/';
-        if (!is_dir($destDir)) {
-            @mkdir($destDir, 0755, true);
-        }
-        file_put_contents($destDir . $filename, $result['bytes']);
-
-        db()->prepare('INSERT INTO ad_generations (job_id, user_id, prompt, image_path, provider, copy_text) VALUES (?, ?, ?, ?, ?, ?)')
-            ->execute([$jobId, $user['id'], $prompt, 'ads/' . $filename, $result['provider'], $adCopy]);
-
-        $generated = 'ads/' . $filename;
-        $generatedCopy = $adCopy;
-    } catch (AiImageException $e) {
-        $error = $e->getMessage();
-    }
 }
 
 $stmt = db()->prepare('SELECT * FROM ad_generations WHERE job_id = ? ORDER BY created_at DESC');
@@ -75,56 +42,45 @@ require __DIR__ . '/includes/header.php';
     Using: <?= h(ai_image_provider_label($job['ai_image_provider'] ?? 'free')) ?><?php if (!empty($job['ai_brand_guidelines'])): ?> · brand guidelines applied<?php endif; ?>
 </p>
 
-<?php if ($error): ?>
-    <div class="alert alert-danger"><?= h($error) ?></div>
-<?php endif; ?>
+<div class="alert alert-danger" id="rvzAdError" hidden></div>
 
-<form method="post" class="card mb-4"><div class="card-body">
-    <?= csrf_field() ?>
-    <input type="hidden" name="job_id" value="<?= (int) $jobId ?>">
-    <div class="mb-3">
-        <label class="form-label">Style</label>
-        <select name="style" class="form-select">
-            <option value="professional">Professional / corporate</option>
-            <option value="bold and energetic">Bold and energetic</option>
-            <option value="warm and friendly">Warm and friendly</option>
-            <option value="minimalist">Minimalist</option>
-        </select>
+<form class="card mb-4" id="rvzAdForm">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+        <input type="hidden" name="job_id" value="<?= (int) $jobId ?>">
+        <div class="mb-3">
+            <label class="form-label">Style</label>
+            <select name="style" class="form-select">
+                <option value="professional">Professional / corporate</option>
+                <option value="bold and energetic">Bold and energetic</option>
+                <option value="warm and friendly">Warm and friendly</option>
+                <option value="minimalist">Minimalist</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="rvzAdSubmitBtn">Generate Ad</button>
+        <div class="mt-3 small text-muted" id="rvzAdProgress" hidden>
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span id="rvzAdProgressText"></span>
+        </div>
+        <noscript><p class="small text-muted mt-2">JavaScript is required to generate ads.</p></noscript>
     </div>
-    <button type="submit" class="btn btn-primary">Generate Ad</button>
-</div></form>
+</form>
 
-<?php if ($generated): ?>
-    <div class="card mb-4"><div class="card-body text-center">
-        <img src="<?= h(UPLOAD_URL . $generated) ?>" alt="Generated ad for <?= h($job['title']) ?>" class="img-fluid rounded mb-3" style="max-width:420px;">
-        <?php if ($generatedCopy): ?>
-            <div class="text-start mx-auto mb-3" style="max-width:420px;">
-                <label class="form-label small text-muted mb-1">Suggested caption (AI-written)</label>
-                <textarea class="form-control form-control-sm" id="rvzAdCopyText" rows="3" readonly><?= h($generatedCopy) ?></textarea>
-                <button type="button" class="btn btn-link btn-sm p-0 mt-1" id="rvzCopyAdCopyBtn">Copy caption</button>
-            </div>
-        <?php endif; ?>
+<div class="card mb-4" id="rvzAdResult" hidden>
+    <div class="card-body text-center">
+        <img id="rvzAdImage" src="" alt="Generated ad for <?= h($job['title']) ?>" class="img-fluid rounded mb-3" style="max-width:420px;">
+        <div class="text-start mx-auto mb-3" style="max-width:420px;" id="rvzAdCopyWrap" hidden>
+            <label class="form-label small text-muted mb-1">Suggested caption (AI-written)</label>
+            <textarea class="form-control form-control-sm" id="rvzAdCopyText" rows="3" readonly></textarea>
+            <button type="button" class="btn btn-link btn-sm p-0 mt-1" id="rvzCopyAdCopyBtn">Copy caption</button>
+        </div>
         <div class="d-flex justify-content-center gap-2 flex-wrap">
-            <a href="<?= h(UPLOAD_URL . $generated) ?>" download class="btn btn-outline-primary btn-sm">Download</a>
+            <a id="rvzAdDownload" href="" download class="btn btn-outline-primary btn-sm">Download</a>
             <a href="<?= h(base_url('share.php?id=' . $jobId . '&platform=linkedin')) ?>" target="_blank" class="btn btn-outline-primary btn-sm">Share on LinkedIn</a>
             <a href="<?= h(base_url('share.php?id=' . $jobId . '&platform=facebook')) ?>" target="_blank" class="btn btn-outline-primary btn-sm">Share on Facebook</a>
         </div>
-    </div></div>
-    <?php if ($generatedCopy): ?>
-    <script>
-        document.getElementById('rvzCopyAdCopyBtn').addEventListener('click', function () {
-            var el = document.getElementById('rvzAdCopyText');
-            el.select();
-            navigator.clipboard && navigator.clipboard.writeText(el.value).then(function () {
-                var btn = document.getElementById('rvzCopyAdCopyBtn');
-                var original = btn.textContent;
-                btn.textContent = 'Copied!';
-                setTimeout(function () { btn.textContent = original; }, 1500);
-            });
-        });
-    </script>
-    <?php endif; ?>
-<?php endif; ?>
+    </div>
+</div>
 
 <?php if ($previousAds): ?>
     <h5 class="mb-3">Previously generated</h5>
@@ -143,5 +99,88 @@ require __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
+<script>
+(function () {
+    var form = document.getElementById('rvzAdForm');
+    var btn = document.getElementById('rvzAdSubmitBtn');
+    var progress = document.getElementById('rvzAdProgress');
+    var progressText = document.getElementById('rvzAdProgressText');
+    var errorBox = document.getElementById('rvzAdError');
+    var result = document.getElementById('rvzAdResult');
+    var planUrl = <?= json_encode(base_url('ajax/ad_plan.php')) ?>;
+    var renderUrl = <?= json_encode(base_url('ajax/ad_render.php')) ?>;
+
+    function setBusy(busy, text) {
+        btn.disabled = busy;
+        progress.hidden = !busy;
+        progressText.textContent = text || '';
+    }
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.hidden = false;
+    }
+
+    async function post(url, data) {
+        var body = new URLSearchParams(data);
+        var res = await fetch(url, { method: 'POST', body: body, credentials: 'same-origin' });
+        var json = null;
+        try { json = await res.json(); } catch (e) { /* non-JSON (e.g. a 503 page) handled below */ }
+        if (!json) {
+            throw new Error(res.status === 503
+                ? 'The server took too long to respond. Please try again — the image service is slow right now.'
+                : 'Unexpected server response (HTTP ' + res.status + '). Please try again.');
+        }
+        if (!json.ok) throw new Error(json.error || 'Something went wrong. Please try again.');
+        return json;
+    }
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        errorBox.hidden = true;
+        result.hidden = true;
+        var fields = new FormData(form);
+        var base = { csrf_token: fields.get('csrf_token'), job_id: fields.get('job_id') };
+
+        try {
+            setBusy(true, 'Step 1 of 2 — planning your caption and scene…');
+            var plan = await post(planUrl, Object.assign({ style: fields.get('style') }, base));
+
+            setBusy(true, 'Step 2 of 2 — rendering the image (this is the slow part, usually 20–45 seconds)…');
+            var rendered = await post(renderUrl, Object.assign({ prompt: plan.prompt, copy: plan.copy || '' }, base));
+
+            document.getElementById('rvzAdImage').src = rendered.image_url;
+            document.getElementById('rvzAdDownload').href = rendered.image_url;
+            var copyWrap = document.getElementById('rvzAdCopyWrap');
+            if (rendered.copy) {
+                document.getElementById('rvzAdCopyText').value = rendered.copy;
+                copyWrap.hidden = false;
+            } else {
+                copyWrap.hidden = true;
+            }
+            result.hidden = false;
+            result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } catch (err) {
+            showError(err.message);
+        } finally {
+            setBusy(false);
+        }
+    });
+
+    document.getElementById('rvzCopyAdCopyBtn').addEventListener('click', function () {
+        var el = document.getElementById('rvzAdCopyText');
+        el.select();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(el.value).then(function () {
+                var b = document.getElementById('rvzCopyAdCopyBtn');
+                var original = b.textContent;
+                b.textContent = 'Copied!';
+                setTimeout(function () { b.textContent = original; }, 1500);
+            });
+        }
+    });
+})();
+</script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>
