@@ -6,7 +6,14 @@
  */
 $user = current_user();
 $description = $pageDescription ?? 'Browse open positions and find your next role with ' . SITE_NAME . ', South Africa\'s trusted personnel and labour hiring specialists.';
-$ogImage = isset($pageImage) ? (str_starts_with($pageImage, 'http') ? $pageImage : base_url($pageImage)) : base_url('assets/img/social-share.png');
+// The default share image carries a version query string keyed to its
+// file mtime: Facebook/LinkedIn/WhatsApp cache og:image by exact URL, so
+// without this, any change to social-share.png would keep showing the old
+// picture until someone manually re-scraped it on every platform.
+$shareImageVersion = @filemtime(__DIR__ . '/../assets/img/social-share.png') ?: 1;
+$ogImage = isset($pageImage)
+    ? (str_starts_with($pageImage, 'http') ? $pageImage : base_url($pageImage))
+    : base_url('assets/img/social-share.png') . '?v=' . $shareImageVersion;
 $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
 ?>
 <!DOCTYPE html>
@@ -67,6 +74,7 @@ $canonical = base_url(ltrim($_SERVER['REQUEST_URI'] ?? '', '/'));
     <?php if (!isset($pageImage)): ?>
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="<?= h(SITE_NAME) ?> logo">
     <?php endif; ?>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<?= h($pageTitle ?? SITE_NAME) ?>">
