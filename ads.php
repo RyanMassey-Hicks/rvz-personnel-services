@@ -37,7 +37,7 @@ $pageTitle = 'Ads — ' . $job['title'];
 require __DIR__ . '/includes/header.php';
 ?>
 <h2 class="mb-1">Create a social ad</h2>
-<p class="text-muted mb-1">for <strong><?= h($job['title']) ?></strong> — Gemini plans a caption and scene, then renders a ready-to-post 1:1 (1024&times;1024) image.</p>
+<p class="text-muted mb-1">for <strong><?= h($job['title']) ?></strong> — AI paints a background scene for the role, then the job title, location, RVZ logo and an "Apply Now" call-to-action are laid over it in RVZ branding. Ready-to-post 1:1 (1080&times;1080).</p>
 <p class="text-muted small mb-4">
     Using: <?= h(ai_image_provider_label($job['ai_image_provider'] ?? 'free')) ?><?php if (!empty($job['ai_brand_guidelines'])): ?> · brand guidelines applied<?php endif; ?>
 </p>
@@ -70,7 +70,7 @@ require __DIR__ . '/includes/header.php';
     <div class="card-body text-center">
         <img id="rvzAdImage" src="" alt="Generated ad for <?= h($job['title']) ?>" class="img-fluid rounded mb-3" style="max-width:420px;">
         <div class="text-start mx-auto mb-3" style="max-width:420px;" id="rvzAdCopyWrap" hidden>
-            <label class="form-label small text-muted mb-1">Suggested caption (AI-written)</label>
+            <label class="form-label small text-muted mb-1" id="rvzAdCopyLabel">Suggested caption</label>
             <textarea class="form-control form-control-sm" id="rvzAdCopyText" rows="3" readonly></textarea>
             <button type="button" class="btn btn-link btn-sm p-0 mt-1" id="rvzCopyAdCopyBtn">Copy caption</button>
         </div>
@@ -155,6 +155,9 @@ require __DIR__ . '/includes/header.php';
             var copyWrap = document.getElementById('rvzAdCopyWrap');
             if (rendered.copy) {
                 document.getElementById('rvzAdCopyText').value = rendered.copy;
+                document.getElementById('rvzAdCopyLabel').textContent = plan.copy_source === 'ai'
+                    ? 'Suggested caption (AI-written)'
+                    : 'Suggested caption (AI was unavailable — edit this template to taste)';
                 copyWrap.hidden = false;
             } else {
                 copyWrap.hidden = true;

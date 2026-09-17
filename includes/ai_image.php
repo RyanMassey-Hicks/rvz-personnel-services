@@ -233,43 +233,57 @@ function gemini_generate_ad_content(string $jobTitle, string $companyName, strin
     $details = "Job title: {$jobTitle}\nCompany: {$companyName}\nLocation: {$location}\nStyle: {$style}"
         . ($brandGuidelines !== '' ? "\nBrand guidelines: {$brandGuidelines}" : '');
 
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        // Short on purpose: this is a fallback-able planning step, not the
-        // main event — failing fast here leaves the image-generation call
-        // below enough of the 60s PHP execution budget to actually complete
-        // (see pollinations_generate_image()'s own timeout comment).
-        CURLOPT_TIMEOUT => 12,
-        CURLOPT_HTTPHEADER => [
-            'x-goog-api-key: ' . GEMINI_API_KEY,
-            'Content-Type: application/json',
+    $payload = json_encode([
+        'systemInstruction' => ['parts' => [['text' => $instruction]]],
+        'contents' => [
+            ['role' => 'user', 'parts' => [['text' => $details]]],
         ],
-        CURLOPT_POSTFIELDS => json_encode([
-            'systemInstruction' => ['parts' => [['text' => $instruction]]],
-            'contents' => [
-                ['role' => 'user', 'parts' => [['text' => $details]]],
-            ],
-            'generationConfig' => [
-                'temperature' => 0.7,
-                'maxOutputTokens' => 1024,
-                'responseMimeType' => 'application/json',
-            ],
-        ]),
+        'generationConfig' => [
+            'temperature' => 0.7,
+            'maxOutputTokens' => 1024,
+            'responseMimeType' => 'application/json',
+        ],
     ]);
-    $raw = curl_exec($ch);
-    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $err = curl_error($ch);
-    curl_close($ch);
 
-    if ($raw === false) {
-        throw new AiImageException('Could not reach Gemini: ' . $err);
-    }
-    $decoded = json_decode($raw, true);
-    if ($status !== 200) {
+    // Gemini's free tier frequently answers "currently experiencing high
+    // demand" (HTTP 503) — seen on 3 of 4 live runs in one morning. One
+    // retry after a short pause recovers most of those. Two attempts at 12s
+    // each still fit comfortably inside this request's ~60s ceiling, since
+    // planning now runs in its own request (ajax/ad_plan.php), separate
+    // from the image render.
+    $decoded = null;
+    $status = 0;
+    for ($attempt = 1; $attempt <= 2; $attempt++) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 12,
+            CURLOPT_HTTPHEADER => [
+                'x-goog-api-key: ' . GEMINI_API_KEY,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POSTFIELDS => $payload,
+        ]);
+        $raw = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($raw === false) {
+            throw new AiImageException('Could not reach Gemini: ' . $err);
+        }
+        $decoded = json_decode($raw, true);
+        if ($status === 200) {
+            break;
+        }
         $msg = $decoded['error']['message'] ?? ('HTTP ' . $status);
-        throw new AiImageException('Gemini ad-planning request failed: ' . $msg);
+        $transient = in_array($status, [429, 503], true) || stripos($msg, 'high demand') !== false || stripos($msg, 'overloaded') !== false;
+        if (!$transient || $attempt === 2) {
+            throw new AiImageException('Gemini ad-planning request failed: ' . $msg);
+        }
+        error_log('[ai_image] Gemini planning attempt ' . $attempt . ' hit a transient error, retrying: ' . $msg);
+        sleep(2);
     }
 
     $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? '';
@@ -286,13 +300,25 @@ function gemini_generate_ad_content(string $jobTitle, string $companyName, strin
 function build_ad_prompt_from_scene(string $scene, string $jobTitle, string $companyName, string $style = 'professional'): string
 {
     $bits = [
-        "A polished, professional square (1:1) recruitment social media advertisement graphic for the job posting \"{$jobTitle}\" at \"{$companyName}\".",
+        "A polished, professional square (1:1) background photograph for a recruitment social media advertisement about a \"{$jobTitle}\" role at \"{$companyName}\".",
         'Scene: ' . $scene,
-        'Style: ' . $style . ', modern, minimalist corporate design using a navy blue, silver, black and white color palette.',
-        'Include bold, legible headline text with the job title and "APPLY NOW" as a call to action. Leave clean negative space suitable for a company logo overlay.',
-        'No photorealistic faces of real people. No spelling errors in any rendered text.',
+        'Style: ' . $style . ', modern, clean, cinematic lighting, with a navy blue, silver and white color palette.',
+        ad_prompt_no_text_rules(),
     ];
     return implode(' ', $bits);
+}
+
+/**
+ * The image is only ever a BACKGROUND — every word on the finished ad is
+ * drawn by includes/ad_composer.php afterwards. Free image models cannot
+ * spell, so asking them for a headline produced gibberish on live runs;
+ * asking for no text at all gives a far cleaner scene to build on.
+ */
+function ad_prompt_no_text_rules(): string
+{
+    return 'Absolutely no text, letters, words, numbers, logos, watermarks, signs or typography anywhere in the image. '
+        . 'Keep the lower third of the image simple and uncluttered, as a headline will be overlaid there later. '
+        . 'No photorealistic faces of real people.';
 }
 
 /** Human-readable label for a provider code, used in the Ads UI. */
@@ -338,11 +364,10 @@ function ai_generate_image_for_company(string $prompt, array $company): array
 function build_ad_prompt(array $job, string $companyName, string $style = 'professional', string $brandGuidelines = ''): string
 {
     $bits = [
-        "A polished, professional square (1:1) recruitment social media advertisement graphic for the job posting \"{$job['title']}\" at \"{$companyName}\".",
-        "Location: {$job['location']}.",
-        'Style: ' . $style . ', modern, minimalist corporate design using a navy blue, silver, black and white color palette.',
-        'Include bold, legible headline text with the job title and "APPLY NOW" as a call to action. Leave clean negative space suitable for a company logo overlay.',
-        'No photorealistic faces of real people. No spelling errors in any rendered text.',
+        "A polished, professional square (1:1) background photograph for a recruitment social media advertisement about a \"{$job['title']}\" role at \"{$companyName}\" in {$job['location']}.",
+        'Show the workplace or industry setting this role belongs to, with modern, clean, cinematic lighting.',
+        'Style: ' . $style . ', with a navy blue, silver and white color palette.',
+        ad_prompt_no_text_rules(),
     ];
     if ($brandGuidelines !== '') {
         $bits[] = 'Follow this company\'s brand guidelines as closely as possible: ' . $brandGuidelines;

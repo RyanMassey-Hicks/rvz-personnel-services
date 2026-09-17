@@ -7,6 +7,7 @@
  */
 require __DIR__ . '/../includes/bootstrap.php';
 require __DIR__ . '/../includes/ad_auth.php';
+require __DIR__ . '/../includes/ad_composer.php';
 
 header('Content-Type: application/json');
 $job = ad_authorize_request();
@@ -27,19 +28,21 @@ if ($prompt === '' || mb_strlen($prompt) > 4000) {
 
 try {
     $result = ai_generate_image_for_company($prompt, $job);
+    // The AI image is only the background — the job title, company, CTA
+    // and logo are drawn over it here (see includes/ad_composer.php).
+    $finalBytes = compose_ad_image($result['bytes'], $job);
 } catch (AiImageException $e) {
     http_response_code(502);
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
     exit;
 }
 
-$ext = $result['mime'] === 'image/jpeg' ? 'jpg' : 'png';
-$filename = 'ad_' . (int) $job['id'] . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+$filename = 'ad_' . (int) $job['id'] . '_' . bin2hex(random_bytes(6)) . '.jpg';
 $destDir = UPLOAD_DIR . 'ads/';
 if (!is_dir($destDir)) {
     @mkdir($destDir, 0755, true);
 }
-if (file_put_contents($destDir . $filename, $result['bytes']) === false) {
+if (file_put_contents($destDir . $filename, $finalBytes) === false) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'error' => 'The image was generated but could not be saved. Please try again.']);
     exit;
