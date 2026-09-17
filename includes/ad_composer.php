@@ -30,13 +30,16 @@ function compose_ad_image(string $imageBytes, array $job): string
     }
 
     $canvas = imagecreatetruecolor(AD_SIZE, AD_SIZE);
-    // Scale the background to cover the square canvas (centre-cropped if not square).
+    // Scale the background to cover the square canvas. Anchored to the TOP
+    // (not centred): the navy band hides the bottom ~40%, and the prompt
+    // asks for the subject in the upper two-thirds, so this keeps the
+    // interesting part of the scene in the visible area.
     $sw = imagesx($src);
     $sh = imagesy($src);
     $scale = max(AD_SIZE / $sw, AD_SIZE / $sh);
     $dw = (int) ceil($sw * $scale);
     $dh = (int) ceil($sh * $scale);
-    imagecopyresampled($canvas, $src, (int) ((AD_SIZE - $dw) / 2), (int) ((AD_SIZE - $dh) / 2), 0, 0, $dw, $dh, $sw, $sh);
+    imagecopyresampled($canvas, $src, (int) ((AD_SIZE - $dw) / 2), 0, 0, 0, $dw, $dh, $sw, $sh);
     imagedestroy($src);
 
     imagealphablending($canvas, true);

@@ -227,7 +227,7 @@ function gemini_generate_ad_content(string $jobTitle, string $companyName, strin
 
     $instruction = "You are a recruitment social-media copywriter and art director. Given a job posting, produce two things:\n"
         . "1. \"copy\": a short, punchy 2-3 sentence social media caption promoting this job, ending with a clear call to action to apply. No hashtags, no emojis.\n"
-        . "2. \"scene\": a vivid, concrete description of a photorealistic background scene for a recruitment ad image — the workplace/industry setting, mood, lighting, and colour palette. Do NOT describe any text, words, headlines, or logos in the scene — those are added separately. Do NOT describe any specific person's face.\n"
+        . "2. \"scene\": a vivid, concrete description of a photorealistic background scene for a recruitment ad image — the workplace/industry setting, mood, lighting, and colour palette. Do NOT describe any text, words, headlines, signs or logos in the scene, and do NOT mention the company name or any brand name in it — those are added separately and an image model will try to paint them as garbled signs. Do NOT describe any specific person's face.\n"
         . "Match the requested style and any brand guidelines given. Respond with ONLY strict JSON, no markdown, no commentary: {\"copy\": \"...\", \"scene\": \"...\"}";
 
     $details = "Job title: {$jobTitle}\nCompany: {$companyName}\nLocation: {$location}\nStyle: {$style}"
@@ -296,13 +296,20 @@ function gemini_generate_ad_content(string $jobTitle, string $companyName, strin
     return ['copy' => $copy, 'scene' => $scene];
 }
 
-/** Builds the image-generation prompt from a Gemini-written scene description, still enforcing our own safety/layout rules rather than trusting the model for those. */
+/**
+ * Builds the image-generation prompt from a Gemini-written scene description,
+ * still enforcing our own safety/layout rules rather than trusting the model
+ * for those. Note the job title and company name are deliberately NOT in
+ * this prompt (they're only inputs to Gemini's scene planning): a brand name
+ * in the prompt made the model try to paint it as a sign — a garbled "RVZ"
+ * showed up on a ceiling in a live run — even with the no-text rules.
+ */
 function build_ad_prompt_from_scene(string $scene, string $jobTitle, string $companyName, string $style = 'professional'): string
 {
     $bits = [
-        "A polished, professional square (1:1) background photograph for a recruitment social media advertisement about a \"{$jobTitle}\" role at \"{$companyName}\".",
+        'A polished square (1:1) background photograph for a recruitment advertisement.',
         'Scene: ' . $scene,
-        'Style: ' . $style . ', modern, clean, cinematic lighting, with a navy blue, silver and white color palette.',
+        'Style: ' . ad_style_direction($style),
         ad_prompt_no_text_rules(),
     ];
     return implode(' ', $bits);
@@ -316,9 +323,23 @@ function build_ad_prompt_from_scene(string $scene, string $jobTitle, string $com
  */
 function ad_prompt_no_text_rules(): string
 {
-    return 'Absolutely no text, letters, words, numbers, logos, watermarks, signs or typography anywhere in the image. '
-        . 'Keep the lower third of the image simple and uncluttered, as a headline will be overlaid there later. '
-        . 'No photorealistic faces of real people.';
+    return 'Absolutely no text, letters, words, numbers, logos, brand names, watermarks, signs, screens with writing, or typography anywhere in the image. '
+        . 'Place the main subject in the upper two-thirds of the frame. No photorealistic faces of real people.';
+}
+
+/**
+ * Concrete visual direction for each style option in the Ads UI. Naming a
+ * style alone ("bold and energetic") barely changed the output; the image
+ * model responds to composition, lighting and colour instructions.
+ */
+function ad_style_direction(string $style): string
+{
+    return match (strtolower(trim($style))) {
+        'bold and energetic' => 'Bold and energetic: dynamic diagonal composition, strong contrast, dramatic directional lighting, a sense of motion and momentum, deep navy tones punctuated by vivid electric purple and bright blue accents.',
+        'warm and friendly' => 'Warm and friendly: soft golden natural daylight, gentle depth of field, natural wood and fabric textures, an inviting and approachable atmosphere, warm neutrals with navy accents.',
+        'minimalist' => 'Minimalist: a single simple subject, generous empty space, muted navy, silver and white tones, even soft lighting, calm and uncluttered.',
+        default => 'Professional and corporate: clean modern interior, balanced composition, crisp cinematic lighting, polished and confident, navy blue, silver and white palette.',
+    };
 }
 
 /** Human-readable label for a provider code, used in the Ads UI. */
@@ -363,10 +384,14 @@ function ai_generate_image_for_company(string $prompt, array $company): array
 /** Builds a consistent, on-brand prompt from a job + company so recruiters don't have to write one. */
 function build_ad_prompt(array $job, string $companyName, string $style = 'professional', string $brandGuidelines = ''): string
 {
+    // Same rule as build_ad_prompt_from_scene(): no company name or quoted
+    // title in the image prompt — the role's plain words are enough to pick
+    // a fitting setting, and proper nouns get painted as garbled signs.
+    $role = preg_replace('/\s+[–\-|:]\s+.*$/u', '', (string) $job['title']); // drop any "– Company" suffix
     $bits = [
-        "A polished, professional square (1:1) background photograph for a recruitment social media advertisement about a \"{$job['title']}\" role at \"{$companyName}\" in {$job['location']}.",
-        'Show the workplace or industry setting this role belongs to, with modern, clean, cinematic lighting.',
-        'Style: ' . $style . ', with a navy blue, silver and white color palette.',
+        'A polished square (1:1) background photograph for a recruitment advertisement.',
+        "Scene: a {$role}'s workspace, close enough to see the actual tools, equipment and materials of that profession in detail, with the environment softly out of focus behind them.",
+        'Style: ' . ad_style_direction($style),
         ad_prompt_no_text_rules(),
     ];
     if ($brandGuidelines !== '') {
